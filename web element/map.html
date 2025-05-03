@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Map</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch("../menu.html")
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("menu-container").innerHTML = html;
+                });
+        });
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='SBA test.html'">Home</button>
+    <div id="menu-container"></div>
+    
+    <main>
+        <h1>Event Map</h1>
+        <p>View the map of the event venue below:</p>
+        <div id="map-container" style="height: 500px; width: 100%;">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3690.6104466388656!2d114.18157217475023!3d22.330567841798654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3404072c952bcb8f%3A0x9343d24f0036aa9a!2sKowloon%20Tsai%20Sports%20Ground!5e0!3m2!1sen!2shk!4v1745324987652!5m2!1sen!2shk" 
+                    width="600" 
+                    height="450" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+    </main>
+
+    <div class="auth-buttons">
+        <div class="auth-button"></div>
+    </div>
+</body>
+</html>

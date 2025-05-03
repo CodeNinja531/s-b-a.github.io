@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Registration</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="db.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch("../menu.html")
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("menu-container").innerHTML = html;
+                });
+            const loginPrompt = document.getElementById("loginPrompt");
+            const userInfo = getUserInfo(); // Get user info from auth.js
+            const userInfoDiv = document.getElementById("user-info");
+
+            if (!userInfo) {
+                // User is not logged in, show the login prompt and hide the registration
+                if (userInfoDiv) userInfoDiv.style.display = "none";
+                if (loginPrompt) loginPrompt.style.display = "block"; // Ensure this line is executed
+            } else {
+                // User is logged in, hide the login prompt and display the registration
+                if (loginPrompt) loginPrompt.style.display = "none";
+                if (userInfoDiv) {
+                    userInfoDiv.style.display = "block";
+                    const displayName = userInfo.displayName;
+                    const classInfo = displayName.slice(0, 2);
+                    const classNumber = displayName.slice(2, 4);
+                    const name = displayName.slice(5);
+                    const grade = classInfo[0] === '1' || classInfo[0] === '2' ? 'C' :
+                                  classInfo[0] === '3' || classInfo[0] === '4' ? 'B' : 'A';
+                    userInfoDiv.innerHTML = `<p>Class: ${classInfo}</p>
+                                             <p>Class No.: ${classNumber}</p>
+                                             <p>Name: ${name}</p>
+                                             <label for="gender">Gender:</label>
+                                             <select id="gender" name="gender">
+                                                 <option value="" selected>--</option>
+                                                 <option value="male">Male</option>
+                                                 <option value="female">Female</option>
+                                             </select>
+                                             <div id="sports-group" style="display: block;"></div>
+                                             <div id="racing-events" style="display: block;"></div>
+                                             <div id="field-events" style="display: block;"></div>
+                                             <br>
+                                             <button id="submit-btn" class="small-submit-btn">Submit</button>`;
+
+                    const sportsGroupDiv = document.getElementById("sports-group");
+                    sportsGroupDiv.style.display = "block";
+
+                    const racingEventsDiv = document.getElementById("racing-events");
+                    racingEventsDiv.style.display = "block";
+
+                    const fieldEventsDiv = document.getElementById("field-events");
+                    fieldEventsDiv.style.display = "block";
+
+                    const racingEvents = {
+                        A: ["100m", "200m", "400m", "800m", "1500m"],
+                        B: ["100m", "200m", "400m", "800m", "1500m"],
+                        C: ["60m", "100m", "200m", "400m", "800m", "1500m"]
+                    };
+
+                    const fieldEvents = {
+                        A: ["High Jump", "Javelin", "Long Jump", "Shot Put"],
+                        B: ["High Jump", "Javelin", "Long Jump", "Shot Put"],
+                        C: ["High Jump", "Long Jump", "Shot Put", "Softball"]
+                    };
+
+                    const genderSelect = document.getElementById("gender");
+                    genderSelect.addEventListener("change", () => {
+                        const gender = genderSelect.value === "male" ? "Boy's" :
+                                       genderSelect.value === "female" ? "Girl's" : "--";
+                        const sportsGroupDiv = document.getElementById("sports-group");
+                        sportsGroupDiv.innerHTML = gender === "--"
+                            ? `<p>Please select a gender to view sports group and events.</p>`
+                            : `<p>Sports Group: ${gender} ${grade} grade</p>`;
+
+                        const racingDiv = document.getElementById("racing-events");
+                        const fieldDiv = document.getElementById("field-events");
+
+                        if (gender === "--") {
+                            racingDiv.innerHTML = "";
+                            fieldDiv.innerHTML = "";
+                            return;
+                        }
+
+                        // Populate racing events
+                        racingDiv.innerHTML = `<h3>Racing Events</h3>`;
+                        racingEvents[grade].forEach(event => {
+                            racingDiv.innerHTML += `<label>
+                                                        <input type="checkbox" name="racing-event" value="${gender} ${grade} ${event}">
+                                                        ${gender} ${grade} ${event}
+                                                    </label><br>`;
+                        });
+
+                        // Populate field events
+                        fieldDiv.innerHTML = `<h3>Field Events</h3>`;
+                        fieldEvents[grade].forEach(event => {
+                            fieldDiv.innerHTML += `<label>
+                                                        <input type="checkbox" name="field-event" value="${gender} ${grade} ${event}">
+                                                        ${gender} ${grade} ${event}
+                                                    </label><br>`;
+                        });
+
+                        const racingInputs = document.getElementsByName("racing-event");
+                        const fieldInputs = document.getElementsByName("field-event");
+
+                        const updateSelectionLimits = () => {
+                            const selectedRacing = Array.from(racingInputs).filter(input => input.checked).length;
+                            const selectedField = Array.from(fieldInputs).filter(input => input.checked).length;
+                            const totalSelected = selectedRacing + selectedField;
+
+                            if (totalSelected >= 3) {
+                                racingInputs.forEach(input => {
+                                    if (!input.checked) input.disabled = true;
+                                });
+                                fieldInputs.forEach(input => {
+                                    if (!input.checked) input.disabled = true;
+                                });
+                            } else {
+                                racingInputs.forEach(input => {
+                                    input.disabled = selectedRacing >= 2 && !input.checked;
+                                });
+                                fieldInputs.forEach(input => {
+                                    input.disabled = selectedField >= 2 && !input.checked;
+                                });
+                            }
+                        };
+
+                        racingInputs.forEach(input => {
+                            input.addEventListener("change", updateSelectionLimits);
+                        });
+
+                        fieldInputs.forEach(input => {
+                            input.addEventListener("change", updateSelectionLimits);
+                        });
+                    });
+
+                    // Add event listener for the Submit button
+                    document.getElementById("submit-btn").addEventListener("click", () => {
+                        const selectedRacing = Array.from(document.getElementsByName("racing-event"))
+                                                        .filter(input => input.checked)
+                                                        .map(input => input.value);
+                        const selectedField = Array.from(document.getElementsByName("field-event"))
+                                                       .filter(input => input.checked)
+                                                       .map(input => input.value);
+
+                        alert(`Selected Racing Events: ${selectedRacing.join(", ")}\nSelected Field Events: ${selectedField.join(", ")}`);
+                    });
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='SBA test.html'">Home</button>
+    <div id="menu-container"></div>
+
+    <main>
+        <h1>Event Registration</h1>
+        Please <b>login with your Carmail account</b> to continue with your registration
+        <div id="loginPrompt" style="display: block;">Please <b>login with your Carmail account</b> to continue with your registration</div>
+        <div id="user-info" style="display: none;"></div>
+    </main>
+
+    <div class="auth-buttons">
+        <div class="auth-button"></div>
+    </div>
+</body>
+</html>

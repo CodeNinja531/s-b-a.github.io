@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Keeper Tools</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch("../menu.html")
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("menu-container").innerHTML = html;
+                });
+
+            const typeSelect = document.getElementById("type");
+            const gradeSelect = document.getElementById("grade");
+            const genderSelect = document.getElementById("gender");
+            const itemsSelect = document.getElementById("items");
+            const trackSelectContainer = document.createElement("div");
+            const trackSelect = document.createElement("select");
+
+            trackSelect.id = "track";
+            trackSelect.name = "track";
+            trackSelect.innerHTML = `<option value="" selected>--</option>`;
+            for (let i = 1; i <= 8; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = `Track ${i}`;
+                trackSelect.appendChild(option);
+            }
+            trackSelectContainer.appendChild(trackSelect);
+            trackSelectContainer.style.display = "none"; // Initially hidden
+            itemsSelect.parentElement.appendChild(trackSelectContainer);
+
+            const racingEvents = {
+                A: ["100m", "200m", "400m", "800m", "1500m"],
+                B: ["100m", "200m", "400m", "800m", "1500m"],
+                C: ["60m", "100m", "200m", "400m", "800m", "1500m"]
+            };
+
+            const fieldEvents = {
+                A: ["High Jump", "Javelin Throw", "Long Jump", "Shot Put"],
+                B: ["High Jump", "Javelin Throw", "Long Jump", "Shot Put"],
+                C: ["High Jump", "Long Jump", "Shot Put", "Softball"]
+            };
+
+            const relayEvents = ["4x100", "4x400"];
+
+            const updateItemsDropdown = () => {
+                const type = typeSelect.value;
+                const grade = gradeSelect.value;
+                const gender = genderSelect.value;
+                itemsSelect.innerHTML = `<option value="" selected>--</option>`;
+                trackSelectContainer.style.display = "none"; // Hide track dropdown by default
+
+                if (type && grade && gender) {
+                    let events = [];
+                    if (type === "racing") {
+                        events = racingEvents[grade];
+                    } else if (type === "field") {
+                        events = fieldEvents[grade];
+                    } else if (type === "relay") {
+                        events = relayEvents;
+                    }
+
+                    events.forEach(event => {
+                        const option = document.createElement("option");
+                        option.value = event;
+                        option.textContent = event;
+                        itemsSelect.appendChild(option);
+                    });
+                }
+            };
+
+            itemsSelect.addEventListener("change", () => {
+                const selectedItem = itemsSelect.value;
+                if (["100m", "200m", "400m"].includes(selectedItem)) {
+                    trackSelectContainer.style.display = "block"; // Show track dropdown
+                } else {
+                    trackSelectContainer.style.display = "none"; // Hide track dropdown
+                }
+            });
+
+            typeSelect.addEventListener("change", updateItemsDropdown);
+            gradeSelect.addEventListener("change", updateItemsDropdown);
+            genderSelect.addEventListener("change", updateItemsDropdown);
+
+            document.getElementById("submit-btn").addEventListener("click", () => {
+                const selectedItem = itemsSelect.value;
+                const selectedTrack = trackSelect.value;
+                if (["100m", "200m", "400m"].includes(selectedItem) && selectedTrack) {
+                    alert(`Selected Item: ${selectedItem}, Track: ${selectedTrack}`);
+                } else {
+                    alert(`Selected Item: ${selectedItem}`);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='SBA test.html'">Home</button>
+    <div id="menu-container"></div>
+    
+    <main>
+        <h1>Record Keeper Tools</h1>
+        <p>This page provides tools for record-keeping during events.</p>
+        <div>
+            <!-- Type Dropdown -->
+            <div>
+                <label for="type">Type:</label>
+                <select id="type" name="type">
+                    <option value="" selected>--</option>
+                    <option value="racing">Racing</option>
+                    <option value="field">Field</option>
+                    <option value="relay">Relay</option>
+                </select>
+            </div>
+            <br>
+            <div style="display: flex; gap: 20px;">
+                <!-- Grade Dropdown -->
+                <div>
+                    <label for="grade">Grade:</label>
+                    <select id="grade" name="grade">
+                        <option value="" selected>--</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+                </div>
+
+                <!-- Gender Dropdown -->
+                <div>
+                    <label for="gender">Gender:</label>
+                    <select id="gender" name="gender">
+                        <option value="" selected>--</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+
+                <!-- Items Dropdown -->
+                <div>
+                    <label for="items">Items:</label>
+                    <select id="items" name="items">
+                        <option value="" selected>--</option>
+                    </select>
+                </div>
+            </div>
+            <br>
+        </div>
+    </main>
+
+    <div class="auth-buttons">
+        <div class="auth-button"></div>
+    </div>
+</body>
+</html>

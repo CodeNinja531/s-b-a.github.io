@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Management App</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            fetch("menu.html")
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("menu-container").innerHTML = html;
+                });
+        });
+    </script>
+</head>
+<body>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='SBA test.html'">Home</button>
+    <div id="menu-container"></div>
+
+    <main>
+        <header>
+            <h1>Event Management System</h1>
+        </header>
+        <p>Welcome to the Event Management App. Use the menu to navigate to different sections.</p>
+    </main>
+
+    <div class="auth-buttons">
+        <div class="auth-button"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Connection Test</title>
+</head>
+<body>
+    <h1>Database Connection Test</h1>
+    <div id="connectionStatus" style="font-weight: bold;"></div>
+    <div id="sqlRunner" style="display: none; margin-top: 20px;">
+        <textarea id="sqlInput" rows="4" cols="50" placeholder="Enter your SQL statement here"></textarea><br>
+        <button id="runSql">Run SQL</button>
+        <div id="sqlResult" style="margin-top: 10px;"></div>
+    </div>
+
+    <script>
+        const sqlite3 = require('sqlite3').verbose();
+        const dbPath = 'Sports day helper'; // Adjust the path if necessary
+
+        const db = new sqlite3.Database(dbPath, (err) => {
+            const statusDiv = document.getElementById('connectionStatus');
+            const sqlRunnerDiv = document.getElementById('sqlRunner');
+            if (err) {
+                statusDiv.textContent = "Failed to connect to the database: " + err.message;
+                statusDiv.style.color = "red";
+                console.error("Database connection error:", err.message);
+            } else {
+                statusDiv.textContent = "Successfully connected to the database.";
+                statusDiv.style.color = "green";
+                sqlRunnerDiv.style.display = "block";
+                console.log("Database connection successful.");
+            }
+        });
+
+        document.getElementById('runSql').addEventListener('click', () => {
+            const sqlInput = document.getElementById('sqlInput').value;
+            const sqlResultDiv = document.getElementById('sqlResult');
+            sqlResultDiv.textContent = ""; // Clear previous results
+
+            if (!sqlInput.trim()) {
+                sqlResultDiv.textContent = "Please enter a valid SQL statement.";
+                sqlResultDiv.style.color = "red";
+                return;
+            }
+
+            db.all(sqlInput, [], (err, rows) => {
+                if (err) {
+                    sqlResultDiv.textContent = "Error executing SQL: " + err.message;
+                    sqlResultDiv.style.color = "red";
+                    console.error("SQL execution error:", err.message);
+                } else {
+                    sqlResultDiv.textContent = JSON.stringify(rows, null, 2);
+                    sqlResultDiv.style.color = "black";
+                    console.log("SQL execution result:", rows);
+                }
+            });
+        });
+
+        window.addEventListener('beforeunload', () => {
+            db.close((err) => {
+                if (err) {
+                    console.error("Error closing the database:", err.message);
+                } else {
+                    console.log("Database connection closed.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

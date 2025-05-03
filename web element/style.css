@@ -1,0 +1,154 @@
+/* Shared styles for toggle button */
+
+body {
+    display: flex;
+    margin: 0;
+}
+
+/* Left menu bar styling */
+.sidebar {
+    width: 250px;
+    background-color: #2c3e50;
+    color: white;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 20px 10px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+}
+
+.sidebar.hidden {
+    transform: translateX(-100%);
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin: 15px 0;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: white;
+    font-size: 1.1em;
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #34495e;
+}
+
+/* Main content styling */
+main {
+    margin-left: 270px;
+    padding: 20px;
+    flex-grow: 1;
+    transition: margin-left 0.3s ease;
+}
+
+main.collapsed {
+    margin-left: 20px;
+}
+
+.toggle-btn {
+    position: fixed;
+    bottom: 20px; /* Changed from top to bottom */
+    left: 20px;
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+/* Styles for the auth buttons container */
+.auth-buttons {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+/* Styles for the user info and toggle area */
+.auth-buttons .auth-button {
+    display: inline-flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center;
+    gap: 5px;
+    background-color: #2c3e50;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center; /* Center text within the button */
+}
+
+.auth-buttons .auth-button img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+/* Styles for the actual logout button (initially hidden) */
+#actual-logout-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 5px;
+    display: none; /* Initially hidden */
+    width: 100%; /* Make it the same width as the user info */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+#actual-logout-button:hover {
+    background-color: #c82333;
+}
+
+.home-btn {
+    bottom: 60px;
+    position: fixed;
+    left: 20px;
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+/* Styles for small submit button */
+.small-submit-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 0.9em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.small-submit-btn:hover {
+    background-color: #218838;
+}
