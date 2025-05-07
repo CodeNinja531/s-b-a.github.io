@@ -34,15 +34,11 @@ def countdown():
     target_time = datetime(2026, 4, 2, 8, 30, 0)
     now = datetime.now()
     remaining = target_time - now
-
-    if remaining.total_seconds() <= 0:
-        label.config(text="Time's up!")
-    else:
-        days = remaining.days
-        hours, remainder = divmod(remaining.seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        label.config(text=f"{days} days {hours:02d}h {minutes:02d}m {seconds:02d}s")
-        label.after(1000, countdown)
+    days = remaining.days
+    hours, remainder = divmod(remaining.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    label.config(text=f"{days} days {hours:02d}h {minutes:02d}m {seconds:02d}s")
+    label.after(1000, countdown)
 
 root = tk.Tk()
 root.title("2026 DSE Countdown")
