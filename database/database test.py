@@ -25,7 +25,7 @@ class SportsRegistrationApp:
         self._create_gmail_selector(master)
 
         # --- Database Connection ---
-        self.conn = sqlite3.connect('D:/Ching/VS code/s-b-a.github.io/database/Sports day helper')
+        self.conn = sqlite3.connect('database\Sports day helper')
         self.cursor = self.conn.cursor()
 
         # --- Retrieve User Info from Database ---

@@ -1,5 +1,8 @@
 # global_vars.py
 # Centralized global variables for easy configuration
+from datetime import datetime
+
+date_for_age_comparison = datetime(2024, 9, 1)
 
 debug_gmails = [
     's20201033@carmelss.edu.hk',
