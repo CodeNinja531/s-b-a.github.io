@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
+from functools import partial
 
 class SportsRegistrationApp:
     def __init__(self, master):
@@ -83,7 +84,7 @@ class SportsRegistrationApp:
         header_frame.grid_columnconfigure(0, weight=1)
 
         ttk.Label(header_frame, text="Sports Day Registration", font=("Inter", 20, "bold"), foreground="#4F46E5").grid(row=0, column=0, pady=5) # Reduced pady
-        ttk.Label(header_frame, text="Welcome to the Sports Day registration portal!", font=("Inter", 10), foreground="#4B5563").grid(row=1, column=0, pady=2) # Reduced pady
+        ttk.Label(header_frame, text="Welcome to the Sports Day registration portal!", font=("Inter", 10), foreground="#4B5563").grid(row=1, column=0, pady=0)
 
     def _create_gmail_selector(self, master):
         frame = ttk.LabelFrame(master, text="Select Gmail for Debugging", padding="5")
@@ -252,42 +253,44 @@ class SportsRegistrationApp:
         self.field_checkbox_widgets.clear()
 
         if selected_gender:
-            # Populate racing events checkboxes
+            # Helper to add checkboxes with correct trace
+            def add_checkbox(frame, event_value, var_dict, widget_dict, row):
+                var = tk.BooleanVar(self.master)
+                # Use partial to avoid late binding bug in lambda
+                var.trace_add("write", partial(self._event_selection_trace, var))
+                cb = ttk.Checkbutton(frame, text=event_value, variable=var, style="TCheckbutton")
+                cb.grid(row=row, column=0, sticky="w", pady=1)
+                var_dict[event_value] = var
+                widget_dict[event_value] = cb
+
             racing_events_for_grade = self.racing_events_data.get(self.grade, [])
             for i, event in enumerate(racing_events_for_grade):
                 event_value = f"{gender_display} {self.grade} {event}"
-                var = tk.BooleanVar(self.master)
-                var.trace_add("write", lambda *args: self.update_event_selection_limits())
-                cb = ttk.Checkbutton(self.racing_events_frame, text=event_value, variable=var, style="TCheckbutton")
-                cb.grid(row=i, column=0, sticky="w", pady=1) # Reduced pady
-                self.racing_checkbox_vars[event_value] = var
-                self.racing_checkbox_widgets[event_value] = cb
+                add_checkbox(self.racing_events_frame, event_value, self.racing_checkbox_vars, self.racing_checkbox_widgets, i)
             if not racing_events_for_grade:
                 ttk.Label(self.racing_events_frame, text="No racing events available for this group.", font=("Inter", 9), foreground="#6B7280").grid(row=0, column=0, sticky="w")
 
-            # Populate field events checkboxes
             field_events_for_grade = self.field_events_data.get(self.grade, [])
             for i, event in enumerate(field_events_for_grade):
                 event_value = f"{gender_display} {self.grade} {event}"
-                var = tk.BooleanVar(self.master)
-                var.trace_add("write", lambda *args: self.update_event_selection_limits())
-                cb = ttk.Checkbutton(self.field_events_frame, text=event_value, variable=var, style="TCheckbutton")
-                cb.grid(row=i, column=0, sticky="w", pady=1) # Reduced pady
-                self.field_checkbox_vars[event_value] = var
-                self.field_checkbox_widgets[event_value] = cb
+                add_checkbox(self.field_events_frame, event_value, self.field_checkbox_vars, self.field_checkbox_widgets, i)
             if not field_events_for_grade:
                 ttk.Label(self.field_events_frame, text="No field events available for this group.", font=("Inter", 9), foreground="#6B7280").grid(row=0, column=0, sticky="w")
 
         # Add "Softball" only for girls' B grade
         if selected_gender == "female" and self.grade == "B":
-            event_value = f"{gender_display} {self.grade} Softball" # Changed "Softball Throw" to "Softball"
+            event_value = f"{gender_display} {self.grade} Softball"
+            row = len(self.field_events_data.get(self.grade, []))
             var = tk.BooleanVar(self.master)
-            var.trace_add("write", lambda *args: self.update_event_selection_limits())
+            var.trace_add("write", partial(self._event_selection_trace, var))
             cb = ttk.Checkbutton(self.field_events_frame, text=event_value, variable=var, style="TCheckbutton")
-            cb.grid(row=len(field_events_for_grade), column=0, sticky="w", pady=1) # Reduced pady
+            cb.grid(row=row, column=0, sticky="w", pady=1)
             self.field_checkbox_vars[event_value] = var
             self.field_checkbox_widgets[event_value] = cb
 
+        self.update_event_selection_limits()
+
+    def _event_selection_trace(self, var, *args):
         self.update_event_selection_limits()
 
     def update_event_selection_limits(self):
@@ -359,10 +362,15 @@ class SportsRegistrationApp:
         """
         Ensures the database connection is closed when the application is terminated.
         """
-        if hasattr(self, 'conn'):
-            self.conn.close()
+        # Use context manager for safety
+        try:
+            if hasattr(self, 'conn'):
+                self.conn.close()
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = SportsRegistrationApp(root)
     root.mainloop()
+
