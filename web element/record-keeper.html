@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Record Keeper Tools</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://accounts.google.com/gsi/client"></script>
+    <link rel="stylesheet" href="style.css"> <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
     <script src="auth.js"></script>
     <script>
@@ -48,7 +47,7 @@
                 C: ["High Jump", "Long Jump", "Shot Put", "Softball"]
             };
 
-            const relayEvents = ["4x100", "4x400"];
+            const relayEvents = ["4x100", "4x400", "8x100"]; // Added 8x100
 
             const updateItemsDropdown = () => {
                 const type = typeSelect.value;
@@ -74,6 +73,7 @@
                         itemsSelect.appendChild(option);
                     });
                 }
+                updateResultForm(); // Call this to update the result form when items dropdown changes
             };
 
             itemsSelect.addEventListener("change", () => {
@@ -83,34 +83,184 @@
                 } else {
                     trackSelectContainer.style.display = "none"; // Hide track dropdown
                 }
+                updateResultForm(); // Call this to update the result form when an item is selected
             });
 
             typeSelect.addEventListener("change", updateItemsDropdown);
             gradeSelect.addEventListener("change", updateItemsDropdown);
             genderSelect.addEventListener("change", updateItemsDropdown);
+            itemsSelect.addEventListener("change", updateResultForm);
 
-            document.getElementById("submit-btn").addEventListener("click", () => {
-                const selectedItem = itemsSelect.value;
-                const selectedTrack = trackSelect.value;
-                if (["100m", "200m", "400m"].includes(selectedItem) && selectedTrack) {
-                    alert(`Selected Item: ${selectedItem}, Track: ${selectedTrack}`);
+            // --- Additions for result input ---
+            const resultForm = document.getElementById("result-form");
+            const resultFields = document.getElementById("result-fields");
+            const resultMessage = document.getElementById("result-message");
+
+            function updateResultForm() {
+                const type = typeSelect.value;
+                const grade = gradeSelect.value;
+                const gender = genderSelect.value;
+                const item = itemsSelect.value;
+                if (type && grade && gender && item) {
+                    renderResultFields(type, item);
                 } else {
-                    alert(`Selected Item: ${selectedItem}`);
+                    resultFields.innerHTML = '<h3 style="margin-top:0;">Enter Result</h3><div style="color:#888;">Please select all options above to enter a result.</div>';
                 }
+            }
+
+            function renderResultFields(type, selectedItem = null) {
+                let html = '<h3 style="margin-top:0;">Enter Result</h3>';
+                if (type === "racing") {
+                    html += `
+                        <div>
+                            <label>Heat/Final:</label>
+                            <select name="types" required>
+                                <option value="heat">Heat</option>
+                                <option value="final">Final</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Athlete ID:</label>
+                            <input name="athlete_id" type="text" required>
+                        </div>
+                        <div>
+                            <label>Time (s):</label>
+                            <input name="time" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 12.34" required>
+                        </div>
+                    `;
+                } else if (type === "field") {
+                    html += `
+                        <div>
+                            <label>Heat/Final:</label>
+                            <select name="types" required>
+                                <option value="heat">Heat</option>
+                                <option value="final">Final</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Athlete ID:</label>
+                            <input name="athlete_id" type="text" required>
+                        </div>
+                        <div>
+                            <label>Trial No.:</label>
+                            <input name="trial" type="number" min="1" required>
+                        </div>
+                        <div>
+                            <label>Distance (m):</label>
+                            <input name="distance" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 5.67" required>
+                        </div>
+                    `;
+                } else if (type === "relay") {
+                    let maxPosition = (selectedItem === "8x100") ? 8 : 4;
+                    html += `
+                        <div>
+                            <label>Athlete ID:</label>
+                            <input name="athlete_id" type="text" required>
+                        </div>
+                        <div>
+                            <label>Position:</label>
+                            <input name="position" type="number" min="1" max="${maxPosition}" required>
+                        </div>
+                        <div>
+                            <label>House:</label>
+                            <input name="team" type="text" required>
+                        </div>
+                        <div>
+                            <label>Time (s):</label>
+                            <input name="time" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 48.76" required>
+                        </div>
+                    `;
+                }
+                resultFields.innerHTML = html;
+            }
+
+            updateResultForm();
+
+            resultForm.addEventListener("submit", function(e) {
+                e.preventDefault();
+                resultMessage.textContent = "";
+                resultMessage.className = ""; 
+
+                const type = typeSelect.value;
+                const grade = gradeSelect.value;
+                const gender = genderSelect.value;
+                const item = itemsSelect.value;
+
+                if (!type || !grade || !gender || !item) {
+                    resultMessage.textContent = "Please select all event details before submitting.";
+                    resultMessage.classList.add("error");
+                    return;
+                }
+
+                const formData = new FormData(resultForm);
+                const data = Object.fromEntries(formData.entries());
+                // For relay, explicitly set type to 'individual' since the field is removed
+                if (type === "relay") {
+                    data.types = "individual"; 
+                }
+
+                data.grade = grade;
+                data.gender = gender;
+                data.item = item;
+                data.category = type;
+
+                console.log("Submitting data:", data);
+
+                // Simulate a successful submission
+                setTimeout(() => {
+                    resultMessage.textContent = "Result submitted successfully!";
+                    resultMessage.classList.add("success");
+                    resultForm.reset();
+                    updateResultForm();
+                }, 1000);
+
+                /*
+                // Example of actual fetch if you had a backend
+                fetch('/api/submit-result', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        resultMessage.textContent = "Result submitted!";
+                        resultMessage.classList.add("success");
+                        resultForm.reset();
+                        updateResultForm();
+                    } else {
+                        resultMessage.textContent = "Error: " + (res.error || "Failed to submit.");
+                        resultMessage.classList.add("error");
+                    }
+                })
+                .catch(() => {
+                    resultMessage.textContent = "Network error or server unavailable.";
+                    resultMessage.classList.add("error");
+                });
+                */
             });
         });
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('main');
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('collapsed');
+            }
+        }
     </script>
 </head>
 <body>
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='SBA test.html'">Home</button>
     <div id="menu-container"></div>
     
+    <button class="home-btn" onclick="location.href='SBA test.html'">Home</button>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+
     <main>
         <h1>Record Keeper Tools</h1>
         <p>This page provides tools for record-keeping during events.</p>
         <div>
-            <!-- Type Dropdown -->
             <div>
                 <label for="type">Type:</label>
                 <select id="type" name="type">
@@ -122,7 +272,6 @@
             </div>
             <br>
             <div style="display: flex; gap: 20px;">
-                <!-- Grade Dropdown -->
                 <div>
                     <label for="grade">Grade:</label>
                     <select id="grade" name="grade">
@@ -133,7 +282,6 @@
                     </select>
                 </div>
 
-                <!-- Gender Dropdown -->
                 <div>
                     <label for="gender">Gender:</label>
                     <select id="gender" name="gender">
@@ -143,7 +291,6 @@
                     </select>
                 </div>
 
-                <!-- Items Dropdown -->
                 <div>
                     <label for="items">Items:</label>
                     <select id="items" name="items">
@@ -153,6 +300,14 @@
             </div>
             <br>
         </div>
+        <form id="result-form">
+            <div id="result-fields">
+                <h3 style="margin-top:0;">Enter Result</h3>
+                <div style="color:#888;">Please select all options above to enter a result.</div>
+            </div>
+            <button type="submit" class="small-submit-btn">Submit Result</button>
+        </form>
+        <div id="result-message"></div>
     </main>
 
     <div class="auth-buttons">
