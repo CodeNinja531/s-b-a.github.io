@@ -1,0 +1,140 @@
+/*
+CREATE TABLE IF NOT EXISTS stu_info (
+    stu_id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    class TEXT,
+    clno INTEGER,
+    gender TEXT NOT NULL,
+    dob DATE,
+    gmail TEXT,
+    house TEXT
+);
+
+
+CREATE TABLE IF NOT EXISTS event (
+    event_id INTEGER,
+    grade TEXT,
+    gender TEXT,
+    item TEXT,
+    category TEXT,
+    duration INTEGER, --minutes
+    start_time datetime
+);
+
+CREATE TABLE IF NOT EXISTS participants (
+    athlete_id TEXT PRIMARY KEY NOT NULL,
+    stu_id TEXT,
+    event_id INTEGER,
+    FOREIGN KEY (stu_id) REFERENCES students(stu_id),
+    FOREIGN KEY (event_id) REFERENCES event(event_id)
+);
+
+CREATE TABLE IF NOT EXISTS racing_result (
+	event_id INTEGER NOT NULL,
+	types TEXT NOT NULL,  -- heat/final
+	athlete_id TEXT NOT NULL,
+    time REAL,  -- seconds
+    PRIMARY KEY (event_id, types, athlete_id)
+);
+
+CREATE TABLE IF NOT EXISTS field_result (
+	event_id INTEGER NOT NULL,
+	types TEXT NOT NULL,  -- heat/final
+	athlete_id TEXT NOT NULL,
+	trial INTEGER,
+    distance REAL,  -- meters
+    PRIMARY KEY (event_id, types, athlete_id)
+);
+
+CREATE TABLE IF NOT EXISTS relay_result (
+	event_id INTEGER NOT NULL,
+	types TEXT NOT NULL,    -- individual/overall
+	athlete_id TEXT NOT NULL,
+	position INTEGER,
+    team TEXT, -- team name/house name
+	time REAL,    -- seconds
+    PRIMARY KEY (event_id, types, athlete_id)
+);
+
+
+INSERT INTO stu_info (stu_id, name, class, clno, gender, dob, gmail, house)
+VALUES (20201033, 'Fung Ching', '5D', 6, 'M', '2008-05-31', 's20201033@carmelss.edu.hk', 'Virtue');
+
+INSERT INTO stu_info (stu_id, name, class, clno, gender, dob, gmail, house)
+VALUES (20229999, 'Mickey Mouse', '3B', 99, 'F', '2010-08-31', 's20229999@carmelss.edu.hk', 'Loyalty'),
+	   (20122020, 'Yuji Nishida', '1C', 31, 'M', '2000-01-30', 's20122020@carmelss.edu.hk', 'Intellect'),
+	   (20011313, 'Taylor Swift', '5A', 13, 'F', '1989-12-13', 's20011313@carmelss.edu.hk', 'Trust'),
+	   (20242009, 'Chris Wong', '1D', 20, 'F', '2012-09-01', 's20242009@carmelss.edu.hk', 'Virtue')
+
+INSERT INTO event (event_id, grade, gender, item, category) VALUES
+(1, 'C', 'boys', '100m', 'racing'),
+(2, 'C', 'boys', '200m', 'racing'),
+(3, 'C', 'boys', '400m', 'racing'),
+(4, 'C', 'boys', '60m', 'racing'),
+(5, 'C', 'boys', '800m', 'racing'),
+(6, 'C', 'boys', '1500m', 'racing'),
+(7, 'C', 'boys', 'High Jump', 'field'),
+(8, 'C', 'boys', 'Long Jump', 'field'),
+(9, 'C', 'boys', 'Shot Put', 'field'),
+(10, 'C', 'boys', 'Softball', 'field'),
+(11, 'C', 'boys', '4x100', 'relay'),
+(12, 'C', 'boys', '4x400', 'relay'),
+(13, 'C', 'girls', '100m', 'racing'),
+(14, 'C', 'girls', '200m', 'racing'),
+(15, 'C', 'girls', '400m', 'racing'),
+(16, 'C', 'girls', '60m', 'racing'),
+(17, 'C', 'girls', '800m', 'racing'),
+(18, 'C', 'girls', '1500m', 'racing'),
+(19, 'C', 'girls', 'High Jump', 'field'),
+(20, 'C', 'girls', 'Long Jump', 'field'),
+(21, 'C', 'girls', 'Softball', 'field'),
+(22, 'C', 'girls', '4x100', 'relay'),
+(23, 'C', 'girls', '4x400', 'relay'),
+(24, 'B', 'boys', '100m', 'racing'),
+(25, 'B', 'boys', '200m', 'racing'),
+(26, 'B', 'boys', '400m', 'racing'),
+(27, 'B', 'boys', '800m', 'racing'),
+(28, 'B', 'boys', '1500m', 'racing'),
+(29, 'B', 'boys', 'High Jump', 'field'),
+(30, 'B', 'boys', 'Javelin', 'field'),
+(31, 'B', 'boys', 'Long Jump', 'field'),
+(32, 'B', 'boys', 'Shot Put', 'field'),
+(33, 'B', 'boys', '4x100', 'relay'),
+(34, 'B', 'boys', '4x400', 'relay'),
+(35, 'B', 'girls', '100m', 'racing'),
+(36, 'B', 'girls', '200m', 'racing'),
+(37, 'B', 'girls', '400m', 'racing'),
+(38, 'B', 'girls', '800m', 'racing'),
+(39, 'B', 'girls', '1500m', 'racing'),
+(40, 'B', 'girls', 'High Jump', 'field'),
+(41, 'B', 'girls', 'Javelin', 'field'),
+(42, 'B', 'girls', 'Long Jump', 'field'),
+(43, 'B', 'girls', 'Shot Put', 'field'),
+(44, 'B', 'girls', 'Softball', 'field'),
+(45, 'B', 'girls', '4x100', 'relay'),
+(46, 'B', 'girls', '4x400', 'relay'),
+(47, 'A', 'boys', '100m', 'racing'),
+(48, 'A', 'boys', '200m', 'racing'),
+(49, 'A', 'boys', '400m', 'racing'),
+(50, 'A', 'boys', '800m', 'racing'),
+(51, 'A', 'boys', '1500m', 'racing'),
+(52, 'A', 'boys', 'High Jump', 'field'),
+(53, 'A', 'boys', 'Javelin', 'field'),
+(54, 'A', 'boys', 'Long Jump', 'field'),
+(55, 'A', 'boys', 'Shot Put', 'field'),
+(56, 'A', 'boys', '4x100', 'relay'),
+(57, 'A', 'boys', '4x400', 'relay'),
+(58, 'A', 'girls', '100m', 'racing'),
+(59, 'A', 'girls', '200m', 'racing'),
+(60, 'A', 'girls', '400m', 'racing'),
+(61, 'A', 'girls', '800m', 'racing'),
+(62, 'A', 'girls', '1500m', 'racing'),
+(63, 'A', 'girls', 'High Jump', 'field'),
+(64, 'A', 'girls', 'Javelin', 'field'),
+(65, 'A', 'girls', 'Long Jump', 'field'),
+(66, 'A', 'girls', '4x100', 'relay'),
+(67, 'A', 'girls', '4x400', 'relay'),
+(68, 'A', 'girls', 'Shot Put', 'field');
+
+
+*/

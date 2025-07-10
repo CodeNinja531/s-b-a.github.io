@@ -4,251 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Record Keeper Tools</title>
-    <link rel="stylesheet" href="style.css"> <script src="https://accounts.google.com/gsi/client"></script>
+    <link rel="stylesheet" href="style.css"> <!-- Link to external CSS file -->
+    <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
     <script src="auth.js"></script>
+    <!-- Add Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            fetch("menu.html")
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById("menu-container").innerHTML = html;
-                });
-
-            const typeSelect = document.getElementById("type");
-            const gradeSelect = document.getElementById("grade");
-            const genderSelect = document.getElementById("gender");
-            const itemsSelect = document.getElementById("items");
-            const trackSelectContainer = document.createElement("div");
-            const trackSelect = document.createElement("select");
-
-            trackSelect.id = "track";
-            trackSelect.name = "track";
-            trackSelect.innerHTML = `<option value="" selected>--</option>`;
-            for (let i = 1; i <= 8; i++) {
-                const option = document.createElement("option");
-                option.value = i;
-                option.textContent = `Track ${i}`;
-                trackSelect.appendChild(option);
-            }
-            trackSelectContainer.appendChild(trackSelect);
-            trackSelectContainer.style.display = "none"; // Initially hidden
-            itemsSelect.parentElement.appendChild(trackSelectContainer);
-
-            const racingEvents = {
-                A: ["100m", "200m", "400m", "800m", "1500m"],
-                B: ["100m", "200m", "400m", "800m", "1500m"],
-                C: ["60m", "100m", "200m", "400m", "800m", "1500m"]
-            };
-
-            const fieldEvents = {
-                A: ["High Jump", "Javelin Throw", "Long Jump", "Shot Put"],
-                B: ["High Jump", "Javelin Throw", "Long Jump", "Shot Put"],
-                C: ["High Jump", "Long Jump", "Shot Put", "Softball"]
-            };
-
-            const relayEvents = ["4x100", "4x400", "8x100"]; // Added 8x100
-
-            const updateItemsDropdown = () => {
-                const type = typeSelect.value;
-                const grade = gradeSelect.value;
-                const gender = genderSelect.value;
-                itemsSelect.innerHTML = `<option value="" selected>--</option>`;
-                trackSelectContainer.style.display = "none"; // Hide track dropdown by default
-
-                if (type && grade && gender) {
-                    let events = [];
-                    if (type === "racing") {
-                        events = racingEvents[grade];
-                    } else if (type === "field") {
-                        events = fieldEvents[grade];
-                    } else if (type === "relay") {
-                        events = relayEvents;
-                    }
-
-                    events.forEach(event => {
-                        const option = document.createElement("option");
-                        option.value = event;
-                        option.textContent = event;
-                        itemsSelect.appendChild(option);
-                    });
-                }
-                updateResultForm(); // Call this to update the result form when items dropdown changes
-            };
-
-            itemsSelect.addEventListener("change", () => {
-                const selectedItem = itemsSelect.value;
-                if (["100m", "200m", "400m"].includes(selectedItem)) {
-                    trackSelectContainer.style.display = "block"; // Show track dropdown
-                } else {
-                    trackSelectContainer.style.display = "none"; // Hide track dropdown
-                }
-                updateResultForm(); // Call this to update the result form when an item is selected
-            });
-
-            typeSelect.addEventListener("change", updateItemsDropdown);
-            gradeSelect.addEventListener("change", updateItemsDropdown);
-            genderSelect.addEventListener("change", updateItemsDropdown);
-            itemsSelect.addEventListener("change", updateResultForm);
-
-            // --- Additions for result input ---
-            const resultForm = document.getElementById("result-form");
-            const resultFields = document.getElementById("result-fields");
-            const resultMessage = document.getElementById("result-message");
-
-            function updateResultForm() {
-                const type = typeSelect.value;
-                const grade = gradeSelect.value;
-                const gender = genderSelect.value;
-                const item = itemsSelect.value;
-                if (type && grade && gender && item) {
-                    renderResultFields(type, item);
-                } else {
-                    resultFields.innerHTML = '<h3 style="margin-top:0;">Enter Result</h3><div style="color:#888;">Please select all options above to enter a result.</div>';
-                }
-            }
-
-            function renderResultFields(type, selectedItem = null) {
-                let html = '<h3 style="margin-top:0;">Enter Result</h3>';
-                if (type === "racing") {
-                    html += `
-                        <div>
-                            <label>Heat/Final:</label>
-                            <select name="types" required>
-                                <option value="heat">Heat</option>
-                                <option value="final">Final</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Athlete ID:</label>
-                            <input name="athlete_id" type="text" required>
-                        </div>
-                        <div>
-                            <label>Time (s):</label>
-                            <input name="time" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 12.34" required>
-                        </div>
-                    `;
-                } else if (type === "field") {
-                    html += `
-                        <div>
-                            <label>Heat/Final:</label>
-                            <select name="types" required>
-                                <option value="heat">Heat</option>
-                                <option value="final">Final</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Athlete ID:</label>
-                            <input name="athlete_id" type="text" required>
-                        </div>
-                        <div>
-                            <label>Trial No.:</label>
-                            <input name="trial" type="number" min="1" required>
-                        </div>
-                        <div>
-                            <label>Distance (m):</label>
-                            <input name="distance" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 5.67" required>
-                        </div>
-                    `;
-                } else if (type === "relay") {
-                    let maxPosition = (selectedItem === "8x100") ? 8 : 4;
-                    html += `
-                        <div>
-                            <label>Athlete ID:</label>
-                            <input name="athlete_id" type="text" required>
-                        </div>
-                        <div>
-                            <label>Position:</label>
-                            <input name="position" type="number" min="1" max="${maxPosition}" required>
-                        </div>
-                        <div>
-                            <label>House:</label>
-                            <input name="team" type="text" required>
-                        </div>
-                        <div>
-                            <label>Time (s):</label>
-                            <input name="time" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 48.76" required>
-                        </div>
-                    `;
-                }
-                resultFields.innerHTML = html;
-            }
-
-            updateResultForm();
-
-            resultForm.addEventListener("submit", function(e) {
-                e.preventDefault();
-                resultMessage.textContent = "";
-                resultMessage.className = ""; 
-
-                const type = typeSelect.value;
-                const grade = gradeSelect.value;
-                const gender = genderSelect.value;
-                const item = itemsSelect.value;
-
-                if (!type || !grade || !gender || !item) {
-                    resultMessage.textContent = "Please select all event details before submitting.";
-                    resultMessage.classList.add("error");
-                    return;
-                }
-
-                const formData = new FormData(resultForm);
-                const data = Object.fromEntries(formData.entries());
-                // For relay, explicitly set type to 'individual' since the field is removed
-                if (type === "relay") {
-                    data.types = "individual"; 
-                }
-
-                data.grade = grade;
-                data.gender = gender;
-                data.item = item;
-                data.category = type;
-
-                console.log("Submitting data:", data);
-
-                // Simulate a successful submission
-                setTimeout(() => {
-                    resultMessage.textContent = "Result submitted successfully!";
-                    resultMessage.classList.add("success");
-                    resultForm.reset();
-                    updateResultForm();
-                }, 1000);
-
-                /*
-                // Example of actual fetch if you had a backend
-                fetch('/api/submit-result', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                })
-                .then(res => res.json())
-                .then(res => {
-                    if (res.success) {
-                        resultMessage.textContent = "Result submitted!";
-                        resultMessage.classList.add("success");
-                        resultForm.reset();
-                        updateResultForm();
-                    } else {
-                        resultMessage.textContent = "Error: " + (res.error || "Failed to submit.");
-                        resultMessage.classList.add("error");
-                    }
-                })
-                .catch(() => {
-                    resultMessage.textContent = "Network error or server unavailable.";
-                    resultMessage.classList.add("error");
-                });
-                */
-            });
-        });
-
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('main');
-            if (sidebar && mainContent) {
-                sidebar.classList.toggle('hidden');
-                mainContent.classList.toggle('collapsed');
-            }
-        }
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
     </script>
 </head>
 <body>
@@ -313,5 +88,368 @@
     <div class="auth-buttons">
         <div class="auth-button"></div>
     </div>
+
+    <!-- Embedded JavaScript -->
+    <script>
+        // IMPORTANT: This JavaScript file contains `fetch` calls to `/api/...` endpoints.
+        // These calls require a backend server (e.g., Node.js, Python, PHP)
+        // to interact with your SQLite database. This HTML file alone will NOT
+        // be able to save data to your SQLite database directly from the browser.
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // This part assumes menu.html exists and is loaded.
+            fetch("menu.html")
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById("menu-container").innerHTML = html;
+                });
+
+            const typeSelect = document.getElementById("type");
+            const gradeSelect = document.getElementById("grade");
+            const genderSelect = document.getElementById("gender");
+            const itemsSelect = document.getElementById("items");
+            const trackSelectContainer = document.createElement("div");
+            const trackSelect = document.createElement("select");
+
+            trackSelect.id = "track";
+            trackSelect.name = "track";
+            trackSelect.innerHTML = `<option value="" selected>--</option>`;
+            for (let i = 1; i <= 8; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = `Track ${i}`;
+                trackSelect.appendChild(option);
+            }
+            trackSelectContainer.appendChild(trackSelect);
+            trackSelectContainer.style.display = "none"; // Initially hidden
+            itemsSelect.parentElement.appendChild(trackSelectContainer);
+
+            // Event data for dropdowns (this is client-side, typically fetched from backend)
+            const racingEvents = {
+                A: ["100m", "200m", "400m", "800m", "1500m"],
+                B: ["100m", "200m", "400m", "800m", "1500m"],
+                C: ["60m", "100m", "200m", "400m", "800m", "1500m"]
+            };
+
+            const fieldEvents = {
+                A: ["High Jump", "Javelin Throw", "Long Jump", "Shot Put"],
+                B: ["High Jump", "Javelin Throw", "Long Jump", "Shot Put"],
+                C: ["High Jump", "Long Jump", "Shot Put", "Softball"]
+            };
+
+            const relayEvents = ["4x100", "4x400", "8x100"];
+
+            // Function to map form gender to database gender
+            const mapGenderToDB = (formGender) => {
+                if (formGender === 'male') return 'boys';
+                if (formGender === 'female') return 'girls';
+                return formGender; // Return as is if no mapping
+            };
+
+            // --- Persistence Functions ---
+            const saveSelections = () => {
+                localStorage.setItem('selectedType', typeSelect.value);
+                localStorage.setItem('selectedGrade', gradeSelect.value);
+                localStorage.setItem('selectedGender', genderSelect.value);
+                localStorage.setItem('selectedItem', itemsSelect.value);
+                if (trackSelectContainer.style.display === 'block') { // Only save track if visible
+                    localStorage.setItem('selectedTrack', trackSelect.value);
+                } else {
+                    localStorage.removeItem('selectedTrack'); // Clear if not applicable
+                }
+            };
+
+            const loadSelections = () => {
+                const storedType = localStorage.getItem('selectedType');
+                const storedGrade = localStorage.getItem('selectedGrade');
+                const storedGender = localStorage.getItem('selectedGender');
+                const storedItem = localStorage.getItem('selectedItem');
+                const storedTrack = localStorage.getItem('selectedTrack');
+
+                if (storedType) typeSelect.value = storedType;
+                if (storedGrade) gradeSelect.value = storedGrade;
+                if (storedGender) genderSelect.value = storedGender;
+
+                // Update items dropdown based on loaded type, grade, gender
+                updateItemsDropdown(false); // Do not trigger saveSelections here
+
+                // Now set the item and track, after options are populated
+                if (storedItem) itemsSelect.value = storedItem;
+                // Trigger item change to show/hide track field correctly
+                const event = new Event('change');
+                itemsSelect.dispatchEvent(event);
+
+                if (storedTrack && trackSelectContainer.style.display === 'block') {
+                    trackSelect.value = storedTrack;
+                }
+            };
+
+            const updateItemsDropdown = (shouldSave = true) => {
+                const type = typeSelect.value;
+                const grade = gradeSelect.value;
+                const gender = genderSelect.value;
+                itemsSelect.innerHTML = `<option value="" selected>--</option>`;
+                trackSelectContainer.style.display = "none"; // Hide track dropdown by default
+
+                if (type && grade && gender) {
+                    let events = [];
+                    if (type === "racing") {
+                        events = racingEvents[grade];
+                    } else if (type === "field") {
+                        events = fieldEvents[grade];
+                    } else if (type === "relay") {
+                        events = relayEvents;
+                    }
+
+                    events.forEach(event => {
+                        const option = document.createElement("option");
+                        option.value = event;
+                        option.textContent = event;
+                        itemsSelect.appendChild(option);
+                    });
+                }
+                if (shouldSave) saveSelections();
+                updateResultForm();
+            };
+
+            itemsSelect.addEventListener("change", () => {
+                const selectedItem = itemsSelect.value;
+                if (["100m", "200m", "400m"].includes(selectedItem)) {
+                    trackSelectContainer.style.display = "block"; // Show track dropdown
+                } else {
+                    trackSelectContainer.style.display = "none"; // Hide track dropdown
+                }
+                saveSelections(); // Save immediately on item change
+                updateResultForm();
+            });
+
+            // Add change listeners for all main dropdowns to save their state
+            typeSelect.addEventListener("change", () => { updateItemsDropdown(); });
+            gradeSelect.addEventListener("change", () => { updateItemsDropdown(); });
+            genderSelect.addEventListener("change", () => { updateItemsDropdown(); });
+            trackSelect.addEventListener("change", saveSelections); // Save track selection
+
+            // --- Rest of your script.js remains the same ---
+            const resultForm = document.getElementById("result-form");
+            const resultFields = document.getElementById("result-fields");
+            const resultMessage = document.getElementById("result-message");
+            const submitButton = resultForm.querySelector('.small-submit-btn');
+
+            function updateResultForm() {
+                const type = typeSelect.value;
+                const grade = gradeSelect.value;
+                const gender = genderSelect.value;
+                const item = itemsSelect.value;
+                if (type && grade && gender && item) {
+                    renderResultFields(type, item);
+                } else {
+                    resultFields.innerHTML = '<h3 style="margin-top:0;">Enter Result</h3><div style="color:#888;">Please select all options above to enter a result.</div>';
+                }
+            }
+
+            function renderResultFields(type, selectedItem = null) {
+                let html = '<h3 style="margin-top:0;">Enter Result</h3>';
+                if (type === "racing") {
+                    html += `
+                        <div>
+                            <label>Heat/Final:</label>
+                            <select name="types" required>
+                                <option value="heat">Heat</option>
+                                <option value="final">Final</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Athlete ID:</label>
+                            <input name="athlete_id" type="text" required>
+                        </div>
+                        <div>
+                            <label>Time (s):</label>
+                            <input name="time" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 12.34" required>
+                        </div>
+                    `;
+                } else if (type === "field") {
+                    html += `
+                        <div>
+                            <label>Heat/Final:</label>
+                            <select name="types" required>
+                                <option value="heat">Heat</option>
+                                <option value="final">Final</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Athlete ID:</label>
+                            <input name="athlete_id" type="text" required>
+                        </div>
+                        <div>
+                            <label>Trial:</label>
+                            <input name="trial" type="number" min="1" required>
+                        </div>
+                        <div>
+                            <label>Distance (m):</label>
+                            <input name="distance" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 5.67" required>
+                        </div>
+                    `;
+                } else if (type === "relay") {
+                    let maxPosition = (selectedItem === "8x100") ? 8 : 4;
+                    html += `
+                        <div>
+                            <label>Athlete ID:</label>
+                            <input name="athlete_id" type="text" required>
+                        </div>
+                        <div>
+                            <label>Position:</label>
+                            <input name="position" type="number" min="1" max="${maxPosition}" required>
+                        </div>
+                        <div>
+                            <label>Team:</label>
+                            <input name="team" type="text" required>
+                        </div>
+                        <div>
+                            <label>Time (s):</label>
+                            <input name="time" type="text" inputmode="decimal" pattern="\\d+(\\.\\d+)?" placeholder="e.g. 48.76" required>
+                        </div>
+                    `;
+                }
+                resultFields.innerHTML = html;
+            }
+
+            // Call loadSelections immediately after initial setup
+            loadSelections(); 
+            // And then update form based on loaded selections
+            updateResultForm();
+
+            resultForm.addEventListener("submit", async function(e) {
+                e.preventDefault();
+                resultMessage.textContent = "";
+                resultMessage.className = "";
+                submitButton.disabled = true;
+                submitButton.textContent = "Submitting...";
+
+                const type = typeSelect.value;
+                const grade = gradeSelect.value;
+                const gender = genderSelect.value;
+                const item = itemsSelect.value;
+
+                if (!type || !grade || !gender || !item) {
+                    resultMessage.textContent = "Please select all event details before submitting.";
+                    resultMessage.classList.add("error");
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Submit Result";
+                    return;
+                }
+
+                // Generate event key for Firebase
+                const dbGender = mapGenderToDB(gender);
+                const eventKey = getEventKey(grade, dbGender, item, type);
+
+                const formData = new FormData(resultForm);
+                const data = Object.fromEntries(formData.entries());
+
+                // Prepare result data according to schema in database.txt
+                let resultData = {
+                    event_key: eventKey,
+                    grade: grade,
+                    gender: dbGender,
+                    item: item,
+                    category: type,
+                    timestamp: Date.now()
+                };
+
+                if (type === "racing") {
+                    resultData.types = data.types;
+                    resultData.athlete_id = data.athlete_id;
+                    resultData.time = parseFloat(data.time);
+                    // racing_result: event_key/types/athlete_id
+                    db.ref(`racing_result/${eventKey}/${data.types}/${data.athlete_id}`).set(resultData)
+                        .then(() => {
+                            resultMessage.textContent = "Result submitted successfully!";
+                            resultMessage.classList.add("success");
+                            resultForm.reset();
+                            updateResultForm();
+                        })
+                        .catch((error) => {
+                            resultMessage.textContent = "Error submitting result: " + error.message;
+                            resultMessage.classList.add("error");
+                        })
+                        .finally(() => {
+                            submitButton.disabled = false;
+                            submitButton.textContent = "Submit Result";
+                        });
+                } else if (type === "field") {
+                    resultData.types = data.types;
+                    resultData.athlete_id = data.athlete_id;
+                    resultData.trial = parseInt(data.trial);
+                    resultData.distance = parseFloat(data.distance);
+                    // field_result: event_key/types/athlete_id
+                    db.ref(`field_result/${eventKey}/${data.types}/${data.athlete_id}`).set(resultData)
+                        .then(() => {
+                            resultMessage.textContent = "Result submitted successfully!";
+                            resultMessage.classList.add("success");
+                            resultForm.reset();
+                            updateResultForm();
+                        })
+                        .catch((error) => {
+                            resultMessage.textContent = "Error submitting result: " + error.message;
+                            resultMessage.classList.add("error");
+                        })
+                        .finally(() => {
+                            submitButton.disabled = false;
+                            submitButton.textContent = "Submit Result";
+                        });
+                } else if (type === "relay") {
+                    resultData.types = "individual";
+                    resultData.athlete_id = data.athlete_id;
+                    resultData.position = parseInt(data.position);
+                    resultData.team = data.team;
+                    resultData.time = parseFloat(data.time);
+                    // relay_result: event_key/types/athlete_id
+                    db.ref(`relay_result/${eventKey}/individual/${data.athlete_id}`).set(resultData)
+                        .then(() => {
+                            resultMessage.textContent = "Result submitted successfully!";
+                            resultMessage.classList.add("success");
+                            resultForm.reset();
+                            updateResultForm();
+                        })
+                        .catch((error) => {
+                            resultMessage.textContent = "Error submitting result: " + error.message;
+                            resultMessage.classList.add("error");
+                        })
+                        .finally(() => {
+                            submitButton.disabled = false;
+                            submitButton.textContent = "Submit Result";
+                        });
+                }
+            });
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('main');
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('collapsed');
+            }
+        }
+    </script>
+</body>
+</html>
+                    resultMessage.textContent = "Network error or server unavailable: " + error.message;
+                    resultMessage.classList.add("error");
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Submit Result";
+                }
+            });
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('main');
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('hidden');
+                mainContent.classList.toggle('collapsed');
+            }
+        }
+    </script>
 </body>
 </html>

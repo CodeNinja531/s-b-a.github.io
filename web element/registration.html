@@ -8,7 +8,22 @@
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
     <script src="auth.js"></script>
-    <script src="db.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             fetch("menu.html")
@@ -150,7 +165,35 @@
                                                        .filter(input => input.checked)
                                                        .map(input => input.value);
 
-                        alert(`Selected Racing Events: ${selectedRacing.join(", ")}\nSelected Field Events: ${selectedField.join(", ")}`);
+                        // Get gender
+                        const gender = document.getElementById("gender").value;
+                        // Get user info
+                        const userInfo = getUserInfo();
+                        const displayName = userInfo.displayName;
+                        const classInfo = displayName.slice(0, 2);
+                        const classNumber = displayName.slice(2, 4);
+                        const name = displayName.slice(5);
+
+                        // Prepare registration data according to database.txt schema
+                        const registrationData = {
+                            class: classInfo,
+                            class_no: classNumber,
+                            name: name,
+                            gender: gender,
+                            racing_events: selectedRacing,
+                            field_events: selectedField,
+                            timestamp: Date.now()
+                        };
+
+                        // Save to Firebase (use a unique key, e.g., user id or push)
+                        const userId = userInfo.id || userInfo.email.replace(/[.#$\[\]]/g, '_');
+                        db.ref('registrations/' + userId).set(registrationData)
+                            .then(() => {
+                                alert("Registration submitted successfully!");
+                            })
+                            .catch((error) => {
+                                alert("Error submitting registration: " + error.message);
+                            });
                     });
                 }
             }
