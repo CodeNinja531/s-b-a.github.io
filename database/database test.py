@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import sqlite3
 from functools import partial
+from datetime import datetime
 
 class SportsRegistrationApp:
     def __init__(self, master):
@@ -23,16 +23,20 @@ class SportsRegistrationApp:
             's20242009@carmelss.edu.hk'
         ]
         self.selected_gmail = tk.StringVar(value=self.debug_gmails[0])
+        # Call _create_gmail_selector once for initial setup
         self._create_gmail_selector(master)
 
-        # --- Database Connection ---
-        self.conn = sqlite3.connect('database\Sports day helper')
-        self.cursor = self.conn.cursor()
+        # --- User Info (Mocked for Firebase) ---
+        self.user_info = {
+            'class': '4A',
+            'clno': '10',
+            'name': 'John Doe',
+            'dob': '2010-05-15',
+            'gender': 'M',
+            'house': 'Virtue'
+        }
 
-        # --- Retrieve User Info from Database ---
-        self.load_user_info(self.selected_gmail.get())
-
-        # Extract user details from the retrieved data
+        # Extract user details from the mocked data
         self.class_info = self.user_info['class']
         self.class_number = self.user_info['clno']
         self.name = self.user_info['name']
@@ -61,14 +65,14 @@ class SportsRegistrationApp:
         self.field_checkbox_widgets = {}
 
         # --- UI Element Creation ---
-        self._create_header(master)  # row=0
-        self._create_gmail_selector(master)  # row=1
-        self._create_user_info_section(master)  # row=2
+        self._create_header(master)
+        # _create_gmail_selector is already called in __init__
+        self._create_user_info_section(master)
         self._create_sports_group_display(master)
         self._create_event_sections(master)
         self._create_submit_button(master)
 
-        # Set gender from database
+        # Set gender from mocked data (already done above, but good to ensure consistency)
         self.gender = 'male' if self.user_info['gender'].upper().startswith('M') else 'female'
 
         # Initial update of the UI
@@ -99,53 +103,78 @@ class SportsRegistrationApp:
         Event handler for gmail selection change.
         Loads user info for the selected gmail and updates the UI.
         """
-        self.load_user_info(self.selected_gmail.get())
+        # Mocked user info change for selected gmail
+        # In a real app, this would fetch data from a database based on selected_gmail
+        current_selected_gmail = self.selected_gmail.get()
+        if current_selected_gmail == 's20201033@carmelss.edu.hk':
+            self.user_info = {
+                'class': '4A',
+                'clno': '10',
+                'name': 'John Doe',
+                'dob': '2010-05-15',
+                'gender': 'M',
+                'house': 'Virtue'
+            }
+        elif current_selected_gmail == 's20011313@carmelss.edu.hk':
+            self.user_info = {
+                'class': '6B',
+                'clno': '25',
+                'name': 'Jane Smith',
+                'dob': '2008-11-20',
+                'gender': 'F',
+                'house': 'Trust'
+            }
+        elif current_selected_gmail == 's20122020@carmelss.edu.hk':
+            self.user_info = {
+                'class': '2C',
+                'clno': '5',
+                'name': 'Peter Jones',
+                'dob': '2012-03-01',
+                'gender': 'M',
+                'house': 'Loyalty'
+            }
+        elif current_selected_gmail == 's20229999@carmelss.edu.hk':
+            self.user_info = {
+                'class': '5D',
+                'clno': '12',
+                'name': 'Alice Brown',
+                'dob': '2009-07-07',
+                'gender': 'F',
+                'house': 'Intellect'
+            }
+        elif current_selected_gmail == 's20242009@carmelss.edu.hk':
+            self.user_info = {
+                'class': '1A',
+                'clno': '1',
+                'name': 'Bob White',
+                'dob': '2013-09-25',
+                'gender': 'M',
+                'house': 'Virtue'
+            }
+        else:
+            # Default or error case
+            self.user_info = {
+                'class': 'N/A',
+                'clno': 'N/A',
+                'name': 'Unknown User',
+                'dob': '2010-01-01',
+                'gender': 'M',
+                'house': 'Virtue'
+            }
+
+
         self.class_info = self.user_info['class']
         self.class_number = self.user_info['clno']
         self.name = self.user_info['name']
         self.grade = self._get_grade(self.user_info['dob'])
         self.gender = 'male' if self.user_info['gender'].upper().startswith('M') else 'female'
-        self._create_user_info_section(self.master)
-        self.update_gender_selection()
-
-    def load_user_info(self, gmail):
-        """
-        Loads user information from the database for the given gmail.
-        """
-        self.user_info = self._get_user_info(gmail)
-        if not self.user_info:
-            raise ValueError(f"No student found with gmail {gmail}")
-
-    def _get_user_info(self, gmail):
-        """
-        Retrieves student information from the database based on the given gmail.
-        """
-        query = """
-        SELECT stu_id, name, class, clno, gender, dob, gmail, house
-        FROM stu_info
-        WHERE gmail = ?
-        """
-        self.cursor.execute(query, (gmail,))
-        result = self.cursor.fetchone()
-
-        if result:
-            return {
-                'stu_id': result[0],
-                'name': result[1],
-                'class': result[2],
-                'clno': result[3],
-                'gender': result[4],
-                'dob': result[5],
-                'gmail': result[6],
-                'house': result[7]
-            }
-        return None
+        self._create_user_info_section(self.master) # Re-create user info section to update labels
+        self.update_gender_selection() # Update event checkboxes based on new gender/grade
 
     def _get_grade(self, dob):
         """
         Determines the sports grade (A, B, or C) based on the date of birth compared to 1-9-2024.
         """
-        from datetime import datetime
         cutoff = datetime(2024, 9, 1)
         dob_date = datetime.strptime(dob, "%Y-%m-%d")
         age = cutoff.year - dob_date.year - ((cutoff.month, cutoff.day) < (dob_date.month, dob_date.day))
@@ -161,13 +190,19 @@ class SportsRegistrationApp:
         Creates the section displaying the logged-in user's information.
         Reduced padding and pady for compactness.
         """
-        user_info_frame = ttk.LabelFrame(master, text="Your Information", padding="10", relief="groove") # Reduced padding
-        user_info_frame.grid(row=2, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
-        user_info_frame.grid_columnconfigure(0, weight=1)
+        # Clear existing user info frame content if it exists
+        if hasattr(self, 'user_info_frame'):
+            for widget in self.user_info_frame.winfo_children():
+                widget.destroy()
+            self.user_info_frame.destroy()
 
-        ttk.Label(user_info_frame, text=f"Class: {self.class_info}", font=("Inter", 10, "bold")).grid(row=0, column=0, sticky="w", pady=1) # Reduced pady
-        ttk.Label(user_info_frame, text=f"Class No.: {self.class_number}", font=("Inter", 10, "bold")).grid(row=1, column=0, sticky="w", pady=1) # Reduced pady
-        ttk.Label(user_info_frame, text=f"Name: {self.name}", font=("Inter", 10, "bold")).grid(row=2, column=0, sticky="w", pady=1)
+        self.user_info_frame = ttk.LabelFrame(master, text="Your Information", padding="10", relief="groove") # Reduced padding
+        self.user_info_frame.grid(row=2, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
+        self.user_info_frame.grid_columnconfigure(0, weight=1)
+
+        ttk.Label(self.user_info_frame, text=f"Class: {self.class_info}", font=("Inter", 10, "bold")).grid(row=0, column=0, sticky="w", pady=1) # Reduced pady
+        ttk.Label(self.user_info_frame, text=f"Class No.: {self.class_number}", font=("Inter", 10, "bold")).grid(row=1, column=0, sticky="w", pady=1) # Reduced pady
+        ttk.Label(self.user_info_frame, text=f"Name: {self.name}", font=("Inter", 10, "bold")).grid(row=2, column=0, sticky="w", pady=1)
         # Add house display with color only for house name, aligned properly
         house_colors = {
             'Virtue': 'red',
@@ -177,7 +212,7 @@ class SportsRegistrationApp:
         }
         house = self.user_info['house']
         house_color = house_colors.get(house.capitalize(), 'black')
-        house_row_frame = ttk.Frame(user_info_frame)
+        house_row_frame = ttk.Frame(self.user_info_frame)
         house_row_frame.grid(row=3, column=0, sticky="w", pady=1)
         ttk.Label(house_row_frame, text="House:", font=("Inter", 10, "bold")).pack(side="left")
         ttk.Label(house_row_frame, text=house, font=("Inter", 10, "bold"), foreground=house_color).pack(side="left")
@@ -277,16 +312,12 @@ class SportsRegistrationApp:
             if not field_events_for_grade:
                 ttk.Label(self.field_events_frame, text="No field events available for this group.", font=("Inter", 9), foreground="#6B7280").grid(row=0, column=0, sticky="w")
 
-        # Add "Softball" only for girls' B grade
-        if selected_gender == "female" and self.grade == "B":
-            event_value = f"{gender_display} {self.grade} Softball"
-            row = len(self.field_events_data.get(self.grade, []))
-            var = tk.BooleanVar(self.master)
-            var.trace_add("write", partial(self._event_selection_trace, var))
-            cb = ttk.Checkbutton(self.field_events_frame, text=event_value, variable=var, style="TCheckbutton")
-            cb.grid(row=row, column=0, sticky="w", pady=1)
-            self.field_checkbox_vars[event_value] = var
-            self.field_checkbox_widgets[event_value] = cb
+            # Add "Softball" only for girls' B grade
+            if selected_gender == "female" and self.grade == "B":
+                event_value = f"{gender_display} {self.grade} Softball"
+                row = len(self.field_events_data.get(self.grade, [])) # Get current number of field events to place softball correctly
+                add_checkbox(self.field_events_frame, event_value, self.field_checkbox_vars, self.field_checkbox_widgets, row)
+
 
         self.update_event_selection_limits()
 
@@ -327,7 +358,6 @@ class SportsRegistrationApp:
         selected_racing = [event_value for event_value, var in self.racing_checkbox_vars.items() if var.get()]
         selected_field = [event_value for event_value, var in self.field_checkbox_vars.items() if var.get()]
 
-        # Remove gender_var check, use self.gender
         if not self.gender:
             messagebox.showwarning("Validation Error", "No gender information available.")
             return
@@ -361,11 +391,13 @@ class SportsRegistrationApp:
     def __del__(self):
         """
         Ensures the database connection is closed when the application is terminated.
+        (This part is commented out as there's no actual database connection in this mock-up)
         """
         # Use context manager for safety
         try:
             if hasattr(self, 'conn'):
-                self.conn.close()
+                # self.conn.close() # Uncomment if you add a database connection
+                pass
         except Exception:
             pass
 
@@ -373,4 +405,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = SportsRegistrationApp(root)
     root.mainloop()
-

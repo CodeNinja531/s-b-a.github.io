@@ -12,8 +12,6 @@ debug_gmails = [
     's20242009@carmelss.edu.hk'
 ]
 
-database_path = 'D:/Ching/VS code/s-b-a.github.io/database/Sports day helper'
-
 racing_events_data = {
     'A': ["100m", "200m", "400m", "800m", "1500m"],
     'B': ["100m", "200m", "400m", "800m", "1500m"],

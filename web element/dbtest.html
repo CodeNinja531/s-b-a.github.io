@@ -3,56 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database Connection Test</title>
+    <title>Firebase Connection Test</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h1>Database Connection Test</h1>
+    <h1>Firebase Connection Test</h1>
     <div id="connectionStatus" style="font-weight: bold;"></div>
-    <div id="sqlRunner" style="display: none; margin-top: 20px;">
-        <textarea id="sqlInput" rows="4" cols="50" placeholder="Enter your SQL statement here"></textarea><br>
-        <button id="runSql">Run SQL</button>
-        <div id="sqlResult" style="margin-top: 10px;"></div>
+    <div id="firebaseTest" style="margin-top: 20px;">
+        <button id="testWrite">Test Write</button>
+        <button id="testRead">Test Read</button>
+        <div id="firebaseResult" style="margin-top: 10px;"></div>
     </div>
-
     <script>
-        const sqlite3 = require('sqlite3').verbose();
-        const dbPath = 'Sports day helper'; // Adjust the path if necessary
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        const db = new sqlite3.Database(dbPath, (err) => {
-            const statusDiv = document.getElementById('connectionStatus');
-            const sqlRunnerDiv = document.getElementById('sqlRunner');
-            if (err) {
-                statusDiv.textContent = "Failed to connect to the database: " + err.message;
-                statusDiv.style.color = "red";
-                console.error("Database connection error:", err.message);
-            } else {
-                statusDiv.textContent = "Successfully connected to the database.";
-                statusDiv.style.color = "green";
-                sqlRunnerDiv.style.display = "block";
-                console.log("Database connection successful.");
-            }
-        });
+        document.getElementById('connectionStatus').textContent = "Firebase initialized.";
 
-        document.getElementById('runSql').addEventListener('click', () => {
-            const sqlInput = document.getElementById('sqlInput').value;
-            const sqlResultDiv = document.getElementById('sqlResult');
-            sqlResultDiv.textContent = ""; // Clear previous results
+        document.getElementById('testWrite').onclick = function() {
+            db.ref('test').set({ hello: "world", timestamp: Date.now() })
+                .then(() => {
+                    document.getElementById('firebaseResult').textContent = "Write successful!";
+                })
+                .catch(err => {
+                    document.getElementById('firebaseResult').textContent = "Write failed: " + err.message;
+                });
+        };
 
-            if (!sqlInput.trim()) {
-                sqlResultDiv.textContent = "Please enter a valid SQL statement.";
-                sqlResultDiv.style.color = "red";
-                return;
-            }
-
-            db.all(sqlInput, [], (err, rows) => {
-                if (err) {
-                    sqlResultDiv.textContent = "Error executing SQL: " + err.message;
-                    sqlResultDiv.style.color = "red";
-                    console.error("SQL execution error:", err.message);
-                } else {
-                    sqlResultDiv.textContent = JSON.stringify(rows, null, 2);
-                    sqlResultDiv.style.color = "black";
-                    console.log("SQL execution result:", rows);
+        document.getElementById('testRead').onclick = function() {
+            db.ref('test').once('value')
+                .then(snapshot => {
+                    document.getElementById('firebaseResult').textContent = "Read: " + JSON.stringify(snapshot.val());
+                })
+                .catch(err => {
+                    document.getElementById('firebaseResult').textContent = "Read failed: " + err.message;
+                });
+        };
+    </script>
+</body>
+</html>
                 }
             });
         });
