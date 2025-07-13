@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Data Display Test</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <h1>Firebase Data Display Test</h1>
+
+    <div id="connectionStatus" style="font-weight: bold;"></div>
+    <div id="firebaseData" style="margin-top: 20px;">
+        <h2>Data from Firebase:</h2>
+        <pre id="dataDisplay"></pre>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        let app;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            document.getElementById('connectionStatus').textContent = "Firebase initialized successfully.";
+            document.getElementById('connectionStatus').style.color = "green";
+        } catch (error) {
+            document.getElementById('connectionStatus').textContent = "Firebase initialization failed: " + error.message;
+            document.getElementById('connectionStatus').style.color = "red";
+        }
+
+        // Get a reference to the database service
+        const database = firebase.database();
+
+        // Function to read data from Firebase
+        function readFirebaseData() {
+            // Replace 'your_data_path' with the path to the data you want to display
+            const dataPath = 'your_data_path';
+            database.ref(dataPath).once('value', (snapshot) => {
+                const data = snapshot.val();
+                const dataDisplayElement = document.getElementById('dataDisplay');
+                if (data) {
+                    dataDisplayElement.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    dataDisplayElement.textContent = "No data found at the specified path.";
+                }
+            }, (errorObject) => {
+                const dataDisplayElement = document.getElementById('dataDisplay');
+                dataDisplayElement.textContent = "Error reading data: " + errorObject.message;
+                dataDisplayElement.style.color = "red";
+            });
+        }
+
+        // Call the function to read data when the page loads
+        readFirebaseData();
+
+    </script>
+</body>
+</html>
