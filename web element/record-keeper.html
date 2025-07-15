@@ -433,23 +433,4 @@
     </script>
 </body>
 </html>
-                    resultMessage.textContent = "Network error or server unavailable: " + error.message;
-                    resultMessage.classList.add("error");
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.textContent = "Submit Result";
-                }
-            });
-        });
 
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('main');
-            if (sidebar && mainContent) {
-                sidebar.classList.toggle('hidden');
-                mainContent.classList.toggle('collapsed');
-            }
-        }
-    </script>
-</body>
-</html>

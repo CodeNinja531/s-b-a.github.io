@@ -17,13 +17,13 @@
     </div>
 
     <script>
-        // Initialize Firebase
+        // Initialize Firebase (LIVE server)
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
             projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
             messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
             appId: "YOUR_APP_ID"
         };
@@ -32,7 +32,7 @@
         let app;
         try {
             app = firebase.initializeApp(firebaseConfig);
-            document.getElementById('connectionStatus').textContent = "Firebase initialized successfully.";
+            document.getElementById('connectionStatus').textContent = "Firebase (LIVE) initialized successfully.";
             document.getElementById('connectionStatus').style.color = "green";
         } catch (error) {
             document.getElementById('connectionStatus').textContent = "Firebase initialization failed: " + error.message;
@@ -42,22 +42,35 @@
         // Get a reference to the database service
         const database = firebase.database();
 
-        // Function to read data from Firebase
+        // Function to read data from Firebase (local)
         function readFirebaseData() {
-            // Replace 'your_data_path' with the path to the data you want to display
-            const dataPath = 'your_data_path';
-            database.ref(dataPath).once('value', (snapshot) => {
-                const data = snapshot.val();
-                const dataDisplayElement = document.getElementById('dataDisplay');
-                if (data) {
-                    dataDisplayElement.textContent = JSON.stringify(data, null, 2);
-                } else {
-                    dataDisplayElement.textContent = "No data found at the specified path.";
-                }
-            }, (errorObject) => {
-                const dataDisplayElement = document.getElementById('dataDisplay');
-                dataDisplayElement.textContent = "Error reading data: " + errorObject.message;
-                dataDisplayElement.style.color = "red";
+            // Example: show all schema roots as in database.txt
+            const schemaRoots = [
+                "stu_info",
+                "event",
+                "participants",
+                "racing_result",
+                "field_result",
+                "relay_result"
+            ];
+            const dataDisplayElement = document.getElementById('dataDisplay');
+            let results = {};
+            let loaded = 0;
+
+            schemaRoots.forEach((root) => {
+                database.ref(root).once('value', (snapshot) => {
+                    results[root] = snapshot.val();
+                    loaded++;
+                    if (loaded === schemaRoots.length) {
+                        dataDisplayElement.textContent = JSON.stringify(results, null, 2);
+                    }
+                }, (errorObject) => {
+                    results[root] = "Error: " + errorObject.message;
+                    loaded++;
+                    if (loaded === schemaRoots.length) {
+                        dataDisplayElement.textContent = JSON.stringify(results, null, 2);
+                    }
+                });
             });
         }
 

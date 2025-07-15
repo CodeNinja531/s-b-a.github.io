@@ -187,12 +187,32 @@
 
                         // Save to Firebase (use a unique key, e.g., user id or push)
                         const userId = userInfo.id || userInfo.email.replace(/[.#$\[\]]/g, '_');
+                        const submitButton = document.getElementById("submit-btn");
+                        // Add result message element if not present
+                        let resultMessage = document.getElementById("result-message");
+                        if (!resultMessage) {
+                            resultMessage = document.createElement("div");
+                            resultMessage.id = "result-message";
+                            submitButton.parentNode.insertBefore(resultMessage, submitButton.nextSibling);
+                        }
+                        resultMessage.textContent = "";
+                        resultMessage.className = "";
+
+                        submitButton.disabled = true;
+                        submitButton.textContent = "Submitting...";
+
                         db.ref('registrations/' + userId).set(registrationData)
                             .then(() => {
-                                alert("Registration submitted successfully!");
+                                resultMessage.textContent = "Registration submitted successfully!";
+                                resultMessage.classList.add("success");
                             })
                             .catch((error) => {
-                                alert("Error submitting registration: " + error.message);
+                                resultMessage.textContent = "Network error or server unavailable: " + error.message;
+                                resultMessage.classList.add("error");
+                            })
+                            .finally(() => {
+                                submitButton.disabled = false;
+                                submitButton.textContent = "Submit";
                             });
                     });
                 }
