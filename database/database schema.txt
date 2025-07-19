@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS event (
     item TEXT,
     category TEXT,
     duration INTEGER, --minutes
-    start_time datetime
+    start_time datetime,
+    status text default 'Scheduled'
 );
 
 CREATE TABLE IF NOT EXISTS participants (
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS field_result (
 CREATE TABLE IF NOT EXISTS relay_result (
 	event_id INTEGER NOT NULL,
 	types TEXT NOT NULL,    -- individual/overall
-	athlete_id TEXT NOT NULL,
+	athlete_id TEXT,
 	position INTEGER,
     team TEXT, -- team name/house name
 	time REAL,    -- seconds
@@ -139,5 +140,4 @@ INSERT INTO event (event_id, grade, gender, item, category) VALUES
 
 
 */
-
 

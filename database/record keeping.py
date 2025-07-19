@@ -271,7 +271,7 @@ class RecordKeeperApp:
                     # Insert/replace the overall record
                     cursor.execute(
                         "INSERT OR REPLACE INTO relay_result (event_id, types, athlete_id, position, team, time) VALUES (?, ?, ?, ?, ?, ?)",
-                        (event_id, "overall", "overall", None, team, total_time)
+                        (event_id, "overall", None, None, team, total_time)
                     )
                 conn.commit()
                 messagebox.showinfo("Success", "Relay result submitted.")
