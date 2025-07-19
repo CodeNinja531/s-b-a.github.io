@@ -22,7 +22,7 @@
             if (!userInfo) {
                 // User is not logged in, show the login prompt and hide the registration
                 if (userInfoDiv) userInfoDiv.style.display = "none";
-                if (loginPrompt) loginPrompt.style.display = "block"; // Ensure this line is executed
+                if (loginPrompt) loginPrompt.style.display = "block";
             } else {
                 // User is logged in, hide the login prompt and display the registration
                 if (loginPrompt) loginPrompt.style.display = "none";
@@ -69,8 +69,9 @@
                         C: ["High Jump", "Long Jump", "Shot Put", "Softball"]
                     };
 
+                    // --- Show event items immediately with default gender as male ---
                     const genderSelect = document.getElementById("gender");
-                    genderSelect.addEventListener("change", () => {
+                    const updateEvents = () => {
                         const gender = genderSelect.value === "male" ? "Boy's" :
                                        genderSelect.value === "female" ? "Girl's" : "--";
                         const sportsGroupDiv = document.getElementById("sports-group");
@@ -137,7 +138,12 @@
                         fieldInputs.forEach(input => {
                             input.addEventListener("change", updateSelectionLimits);
                         });
-                    });
+                    };
+
+                    // Show events immediately with default gender as male
+                    updateEvents();
+
+                    genderSelect.addEventListener("change", updateEvents);
 
                     // Add event listener for the Submit button
                     document.getElementById("submit-btn").addEventListener("click", () => {
