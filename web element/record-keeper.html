@@ -14,13 +14,12 @@
     <script>
         // Initialize Firebase
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDFfl6qcOS-N7ErxULvMVJ5rrjet8VWHac",
+            authDomain: "ict-sba-sports-day-helper.firebaseapp.com",
+            projectId: "ict-sba-sports-day-helper",
+            storageBucket: "ict-sba-sports-day-helper.firebasestorage.app",
+            messagingSenderId: "992447656779",
+            appId: "1:992447656779:web:57c3014598f34661086ece"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -73,6 +72,20 @@
                     </select>
                 </div>
             </div>
+            <div id="track-no-container" style="margin-top:10px; display:none;">
+                <label for="track">Track No.:</label>
+                <select id="track" name="track">
+                    <option value="" selected>--</option>
+                    <option value="1">Track 1</option>
+                    <option value="2">Track 2</option>
+                    <option value="3">Track 3</option>
+                    <option value="4">Track 4</option>
+                    <option value="5">Track 5</option>
+                    <option value="6">Track 6</option>
+                    <option value="7">Track 7</option>
+                    <option value="8">Track 8</option>
+                </select>
+            </div>
             <br>
         </div>
         <form id="result-form">
@@ -108,21 +121,9 @@
             const gradeSelect = document.getElementById("grade");
             const genderSelect = document.getElementById("gender");
             const itemsSelect = document.getElementById("items");
-            const trackSelectContainer = document.createElement("div");
-            const trackSelect = document.createElement("select");
-
-            trackSelect.id = "track";
-            trackSelect.name = "track";
-            trackSelect.innerHTML = `<option value="" selected>--</option>`;
-            for (let i = 1; i <= 8; i++) {
-                const option = document.createElement("option");
-                option.value = i;
-                option.textContent = `Track ${i}`;
-                trackSelect.appendChild(option);
-            }
-            trackSelectContainer.appendChild(trackSelect);
-            trackSelectContainer.style.display = "none"; // Initially hidden
-            itemsSelect.parentElement.appendChild(trackSelectContainer);
+            // Remove old trackSelectContainer/trackSelect creation
+            const trackNoContainer = document.getElementById("track-no-container");
+            const trackSelect = document.getElementById("track");
 
             // Event data for dropdowns (this is client-side, typically fetched from backend)
             const racingEvents = {
@@ -152,7 +153,7 @@
                 localStorage.setItem('selectedGrade', gradeSelect.value);
                 localStorage.setItem('selectedGender', genderSelect.value);
                 localStorage.setItem('selectedItem', itemsSelect.value);
-                if (trackSelectContainer.style.display === 'block') { // Only save track if visible
+                if (trackNoContainer.style.display === 'block') { // Only save track if visible
                     localStorage.setItem('selectedTrack', trackSelect.value);
                 } else {
                     localStorage.removeItem('selectedTrack'); // Clear if not applicable
@@ -179,7 +180,7 @@
                 const event = new Event('change');
                 itemsSelect.dispatchEvent(event);
 
-                if (storedTrack && trackSelectContainer.style.display === 'block') {
+                if (storedTrack && trackNoContainer.style.display === 'block') {
                     trackSelect.value = storedTrack;
                 }
             };
@@ -189,7 +190,8 @@
                 const grade = gradeSelect.value;
                 const gender = genderSelect.value;
                 itemsSelect.innerHTML = `<option value="" selected>--</option>`;
-                trackSelectContainer.style.display = "none"; // Hide track dropdown by default
+                // Hide track dropdown by default
+                trackNoContainer.style.display = "none";
 
                 if (type && grade && gender) {
                     let events = [];
@@ -214,12 +216,13 @@
 
             itemsSelect.addEventListener("change", () => {
                 const selectedItem = itemsSelect.value;
+                // Show track dropdown only for racing 100m, 200m, 400m
                 if (["100m", "200m", "400m"].includes(selectedItem)) {
-                    trackSelectContainer.style.display = "block"; // Show track dropdown
+                    trackNoContainer.style.display = "block";
                 } else {
-                    trackSelectContainer.style.display = "none"; // Hide track dropdown
+                    trackNoContainer.style.display = "none";
                 }
-                saveSelections(); // Save immediately on item change
+                saveSelections();
                 updateResultForm();
             });
 
@@ -227,8 +230,7 @@
             typeSelect.addEventListener("change", () => { updateItemsDropdown(); });
             gradeSelect.addEventListener("change", () => { updateItemsDropdown(); });
             genderSelect.addEventListener("change", () => { updateItemsDropdown(); });
-            trackSelect.addEventListener("change", saveSelections); // Save track selection
-
+            trackSelect.addEventListener("change", saveSelections);
             // --- Rest of your script.js remains the same ---
             const resultForm = document.getElementById("result-form");
             const resultFields = document.getElementById("result-fields");
