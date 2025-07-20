@@ -36,8 +36,6 @@ def get_next_athlete_id(cursor):
         return "0001"
 
 def get_event_id(cursor, event_name):
-    # event_name format: "Boy's A 100m"
-    # Parse event_name
     parts = event_name.split()
     if len(parts) < 3:
         return None
@@ -59,18 +57,15 @@ def save_registration_to_db(data):
                 event_id INTEGER
             )
         """)
-        # Find or assign athlete_id
         stu_id = data.get('stu_id', None)
         cursor.execute("SELECT athlete_id FROM participants WHERE stu_id=?", (stu_id,))
         row = cursor.fetchone()
         if row and row[0]:
             athlete_id = row[0]
-            # Delete previous records for this athlete
             cursor.execute("DELETE FROM participants WHERE athlete_id=?", (athlete_id,))
         else:
             athlete_id = get_next_athlete_id(cursor)
-        # Insert into participants table for each selected event
-        # Racing events
+
         for event in data['racing_events']:
             event_id = get_event_id(cursor, event)
             cursor.execute("""
@@ -94,17 +89,14 @@ class SportsRegistrationApp:
     def __init__(self, master):
         self.master = master
         master.title("Sports Day Registration")
-        # Adjusted geometry to be more compact, allowing for smaller screens too
         master.geometry("550x700")
-        master.resizable(False, False) # Prevent resizing to maintain compact layout without scroll
-
-        # Configure column weights for basic responsiveness - keep it for main content
+        master.resizable(False, False)
         master.grid_columnconfigure(0, weight=1)
 
         # --- Gmail Selection from DB ---
         students = get_all_students()
         self.students = students
-        self.debug_names = [row[1] for row in students]  # Use name column
+        self.debug_names = [row[1] for row in students]
         self.selected_name = tk.StringVar(value=self.debug_names[0] if self.debug_names else "")
         self._create_name_selector(master)
         # --- User Info from DB ---
@@ -115,7 +107,7 @@ class SportsRegistrationApp:
         self.grade = self._get_grade(self.user_info['dob'])
         self.gender = 'male' if self.user_info['gender'].upper().startswith('M') else 'female'
 
-        # --- Event Data Definitions ---
+        # --- Events ---
         self.racing_events_data = {
             'A': ["100m", "200m", "400m", "800m", "1500m"],
             'B': ["100m", "200m", "400m", "800m", "1500m"],
@@ -127,27 +119,23 @@ class SportsRegistrationApp:
             'C': ["High Jump", "Long Jump", "Shot Put", "Softball"]
         }
 
-        # --- Tkinter Variables for UI State Management ---
         self.gender_var = tk.StringVar(master)
-        self.gender_var.set("") # Default empty selection
+        self.gender_var.set("")
 
         self.racing_checkbox_vars = {}
         self.field_checkbox_vars = {}
         self.racing_checkbox_widgets = {}
         self.field_checkbox_widgets = {}
 
-        # --- UI Element Creation ---
+        # --- UI Elements ---
         self._create_header(master)
-        # _create_gmail_selector is already called in __init__
         self._create_user_info_section(master)
         self._create_sports_group_display(master)
         self._create_event_sections(master)
         self._create_submit_button(master)
-
-        # Set gender from mocked data (already done above, but good to ensure consistency)
         self.gender = 'male' if self.user_info['gender'].upper().startswith('M') else 'female'
 
-        # Initial update of the UI
+        # Initialize UI
         self.update_gender_selection()
 
     def _get_user_info_by_name(self, name):
@@ -180,10 +168,6 @@ class SportsRegistrationApp:
             }
 
     def _create_header(self, master):
-        """
-        Creates the application's header section.
-        Reduced pady for more compactness.
-        """
         header_frame = ttk.Frame(master, padding="15") # Reduced padding
         header_frame.grid(row=0, column=0, sticky="ew")
         header_frame.grid_columnconfigure(0, weight=1)
@@ -211,7 +195,7 @@ class SportsRegistrationApp:
 
     def _get_grade(self, dob):
         """
-        Determines the sports grade (A, B, or C) based on the date of birth compared to 1-9-2024.
+        based on DOB compared to 1-9-2024.
         """
         cutoff = datetime(2024, 9, 1)
         dob_date = datetime.strptime(dob, "%Y-%m-%d")
@@ -224,11 +208,6 @@ class SportsRegistrationApp:
             return 'C'
 
     def _create_user_info_section(self, master):
-        """
-        Creates the section displaying the logged-in user's information.
-        Reduced padding and pady for compactness.
-        """
-        # Clear existing user info frame content if it exists
         if hasattr(self, 'user_info_frame'):
             for widget in self.user_info_frame.winfo_children():
                 widget.destroy()
@@ -241,7 +220,6 @@ class SportsRegistrationApp:
         ttk.Label(self.user_info_frame, text=f"Class: {self.class_info}", font=("Inter", 10, "bold")).grid(row=0, column=0, sticky="w", pady=1) # Reduced pady
         ttk.Label(self.user_info_frame, text=f"Class No.: {self.class_number}", font=("Inter", 10, "bold")).grid(row=1, column=0, sticky="w", pady=1) # Reduced pady
         ttk.Label(self.user_info_frame, text=f"Name: {self.name}", font=("Inter", 10, "bold")).grid(row=2, column=0, sticky="w", pady=1)
-        # Add house display with color only for house name, aligned properly
         house_colors = {
             'Virtue': 'red',
             'Trust': 'green',
@@ -256,18 +234,10 @@ class SportsRegistrationApp:
         ttk.Label(house_row_frame, text=house, font=("Inter", 10, "bold"), foreground=house_color).pack(side="left")
 
     def _create_sports_group_display(self, master):
-        """
-        Creates the label that displays the derived sports group.
-        Reduced pady.
-        """
         self.sports_group_label = ttk.Label(master, text="", font=("Inter", 11, "bold"), foreground="#10B981", wraplength=450) # Reduced wraplength
         self.sports_group_label.grid(row=3, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
 
     def _create_event_sections(self, master):
-        """
-        Creates the parent frames for racing and field events.
-        Reduced padding and pady for compactness.
-        """
         self.racing_events_frame = ttk.LabelFrame(master, text="Racing Events (Max 2)", padding="10", relief="groove") # Reduced padding
         self.racing_events_frame.grid(row=4, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
         self.racing_events_frame.grid_columnconfigure(0, weight=1)
@@ -282,19 +252,18 @@ class SportsRegistrationApp:
         Reduced pady.
         """
         submit_button = ttk.Button(master, text="Submit Registration", command=self.submit_registration, style="TButton")
-        submit_button.grid(row=6, column=0, pady=10) # Reduced pady
+        submit_button.grid(row=6, column=0, pady=10)
         master.style = ttk.Style()
         master.style.configure("TButton",
-                               font=("Arial", 12, "bold"), # Changed font to Arial for better readability
-                               background="#1E90FF", # Kept background color as Dodger Blue
-                               foreground="black", # Changed foreground color to black for better readability
-                               padding=(10, 8), # Reduced padding
+                               font=("Arial", 12, "bold"),
+                               background="#1E90FF",
+                               foreground="black",
+                               padding=(10, 8),
                                relief="raised",
                                borderwidth=0)
         master.style.map("TButton",
-                         background=[('active', '#4682B4')], # Kept active background color as Steel Blue
-                         foreground=[('active', 'black')]) # Changed active foreground color to black
-        # Add style for checkbuttons as well
+                         background=[('active', '#4682B4')],
+                         foreground=[('active', 'black')])
         master.style.configure("TCheckbutton", font=("Inter", 10))
 
 
@@ -314,7 +283,6 @@ class SportsRegistrationApp:
         else:
             self.sports_group_label.config(text="No gender information available.")
 
-        # Clear all existing checkboxes from the frames before repopulating
         for widget in self.racing_events_frame.winfo_children():
             widget.destroy()
         for widget in self.field_events_frame.winfo_children():
@@ -326,10 +294,8 @@ class SportsRegistrationApp:
         self.field_checkbox_widgets.clear()
 
         if selected_gender:
-            # Helper to add checkboxes with correct trace
             def add_checkbox(frame, event_value, var_dict, widget_dict, row):
                 var = tk.BooleanVar(self.master)
-                # Use partial to avoid late binding bug in lambda
                 var.trace_add("write", partial(self._event_selection_trace, var))
                 cb = ttk.Checkbutton(frame, text=event_value, variable=var, style="TCheckbutton")
                 cb.grid(row=row, column=0, sticky="w", pady=1)
@@ -350,10 +316,9 @@ class SportsRegistrationApp:
             if not field_events_for_grade:
                 ttk.Label(self.field_events_frame, text="No field events available for this group.", font=("Inter", 9), foreground="#6B7280").grid(row=0, column=0, sticky="w")
 
-            # Add "Softball" only for girls' B grade
             if selected_gender == "female" and self.grade == "B":
                 event_value = f"{gender_display} {self.grade} Softball"
-                row = len(self.field_events_data.get(self.grade, [])) # Get current number of field events to place softball correctly
+                row = len(self.field_events_data.get(self.grade, []))
                 add_checkbox(self.field_events_frame, event_value, self.field_checkbox_vars, self.field_checkbox_widgets, row)
 
 
@@ -364,7 +329,7 @@ class SportsRegistrationApp:
 
     def update_event_selection_limits(self):
         """
-        Enables/disables checkboxes based on selection rules.
+        Controls checkboxes
         """
         selected_racing_count = sum(var.get() for var in self.racing_checkbox_vars.values())
         selected_field_count = sum(var.get() for var in self.field_checkbox_vars.values())
@@ -390,8 +355,7 @@ class SportsRegistrationApp:
 
     def submit_registration(self):
         """
-        Collects selected events and displays a summary in a messagebox.
-        Includes validation checks.
+        Mainly data checking
         """
         selected_racing = [event_value for event_value, var in self.racing_checkbox_vars.items() if var.get()]
         selected_field = [event_value for event_value, var in self.field_checkbox_vars.items() if var.get()]
@@ -438,10 +402,8 @@ class SportsRegistrationApp:
             messagebox.showerror("Error", msg)
 
     def __del__(self):
-        # Use context manager for safety
         try:
             if hasattr(self, 'conn'):
-                # self.conn.close() # Uncomment if you add a database connection
                 pass
         except Exception:
             pass

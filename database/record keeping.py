@@ -37,7 +37,6 @@ class RecordKeeperApp:
 
         # --- UI Layout ---
         self._create_header(master)
-        # Removed menu buttons (sidebar/home)
         self._create_dropdowns(master)
         self._create_result_form(master)
         self._create_submit_button(master)
@@ -262,13 +261,11 @@ class RecordKeeperApp:
                 count = cursor.fetchone()[0]
                 max_members = 8 if item == "8x100" else 4
                 if count == max_members:
-                    # Sum all times for this team/event
                     cursor.execute(
                         "SELECT SUM(time) FROM relay_result WHERE event_id=? AND team=? AND types='individual'",
                         (event_id, team)
                     )
                     total_time = cursor.fetchone()[0]
-                    # Insert/replace the overall record
                     cursor.execute(
                         "INSERT OR REPLACE INTO relay_result (event_id, types, athlete_id, position, team, time) VALUES (?, ?, ?, ?, ?, ?)",
                         (event_id, "overall", None, None, team, total_time)

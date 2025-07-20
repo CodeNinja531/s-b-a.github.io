@@ -1,11 +1,11 @@
 let userEmail = '';
-let googleClientId = '992447656779-odg7cr1em2rct7p4oe2e4bistsdihisc.apps.googleusercontent.com'; // REMEMBER TO REPLACE THIS!
-let isLogoutVisible = false; // Track the visibility of the actual logout button
+let googleClientId = '992447656779-odg7cr1em2rct7p4oe2e4bistsdihisc.apps.googleusercontent.com'; // google clident id
+let visible = false;
 
 function initializeGoogleSignIn() {
     google.accounts.id.initialize({
         client_id: googleClientId,
-        callback: handleCredentialResponse,
+        callback: CredentialResponse,
         auto_select: false,
         prompt_parent_id: 'g_id_signin'
     });
@@ -16,11 +16,11 @@ function initializeGoogleSignIn() {
     console.log("initializeGoogleSignIn called");
 }
 
-function handleCredentialResponse(response) {
+function CredentialResponse(response) {
     const token = response.credential;
-    const user = parseJwt(token); // Decode the JWT to get user info
+    const user = parseJwt(token);
 
-    // Store user info in localStorage
+    // Store user info
     localStorage.setItem('loggedInUser', JSON.stringify({ email: user.email, name: user.name, picture: user.picture }));
     console.log("loggedInUser stored in localStorage:", localStorage.getItem('loggedInUser'));
 
@@ -32,9 +32,8 @@ function handleCredentialResponse(response) {
         }
     }
 
-    updateLoginUI(); // Update UI based on local storage
+    updateLoginUI();
 
-    // Send login request to the backend (optional, depending on your needs)
     fetch('http://localhost:3000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -49,8 +48,8 @@ function handleCredentialResponse(response) {
 
 function updateLoginUI() {
     const authButtonDiv = document.querySelector('.auth-button');
-    authButtonDiv.innerHTML = ''; // Clear existing content
-    authButtonDiv.onclick = null; // Remove any existing onclick handler
+    authButtonDiv.innerHTML = '';
+    authButtonDiv.onclick = null;
 
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     const userGender = localStorage.getItem('userGender');
@@ -58,17 +57,17 @@ function updateLoginUI() {
     console.log("updateLoginUI called");
     console.log("loggedInUser from localStorage:", loggedInUser);
 
+    // show logged in user elements
     if (loggedInUser) {
-        console.log("User is logged in - updating UI to show name/icon");
         authButtonDiv.style.display = 'flex';
-        authButtonDiv.style.flexDirection = 'row'; // Ensure horizontal alignment
+        authButtonDiv.style.flexDirection = 'row';
         authButtonDiv.style.alignItems = 'center';
         authButtonDiv.style.padding = '8px 12px';
         authButtonDiv.style.backgroundColor = '#2c3e50';
         authButtonDiv.style.color = 'white';
         authButtonDiv.style.borderRadius = '5px';
         authButtonDiv.style.cursor = 'pointer';
-        authButtonDiv.style.gap = '10px'; // Space between items
+        authButtonDiv.style.gap = '10px';
 
         // Profile Picture
         const profileImage = document.createElement('img');
@@ -82,13 +81,6 @@ function updateLoginUI() {
         const displayNameSpan = document.createElement('span');
         displayNameSpan.textContent = loggedInUser.name;
 
-        // Display gender if available
-        if (userGender) {
-            const genderSpan = document.createElement('span');
-            genderSpan.textContent = `Gender: ${userGender}`;
-            authButtonDiv.appendChild(genderSpan);
-        }
-
         // Logout Button
         const logoutButton = document.createElement('button');
         logoutButton.id = 'actual-logout-button';
@@ -99,20 +91,17 @@ function updateLoginUI() {
         logoutButton.style.padding = '8px 12px';
         logoutButton.style.borderRadius = '5px';
         logoutButton.style.cursor = 'pointer';
-        logoutButton.style.marginLeft = '10px'; // Add space to the left
-        logoutButton.style.display = 'none'; // Initially hidden
-        logoutButton.style.alignSelf = 'center'; // Ensure vertical alignment
-        logoutButton.onclick = logout; // Attach logout function
-
+        logoutButton.style.marginLeft = '10px';
+        logoutButton.style.display = 'none';
+        logoutButton.style.alignSelf = 'center';
+        logoutButton.onclick = logout;
         authButtonDiv.appendChild(profileImage);
         authButtonDiv.appendChild(displayNameSpan);
-        authButtonDiv.onclick = toggleLogoutButton; // Attach toggle to the container
-
-        // Insert the logout button after the container
+        authButtonDiv.onclick = toggleLogoutButton;
         authButtonDiv.parentNode.insertBefore(logoutButton, authButtonDiv.nextSibling);
-        isLogoutVisible = false; // Initialize state
+        visible = false;
     } else {
-        console.log("User is NOT logged in - rendering sign-in button");
+        // sign in button
         google.accounts.id.renderButton(
             authButtonDiv,
             { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
@@ -126,32 +115,31 @@ function updateLoginUI() {
         authButtonDiv.style.borderRadius = '';
         authButtonDiv.style.cursor = 'pointer';
         authButtonDiv.style.gap = '';
-        authButtonDiv.onclick = null; // Ensure no toggle action when logged out
-
-        // Ensure any existing logout button is removed
+        authButtonDiv.onclick = null;
         const existingLogoutButton = document.getElementById('actual-logout-button');
         if (existingLogoutButton) {
             existingLogoutButton.remove();
         }
-        isLogoutVisible = false;
+        visible = false;
     }
 }
 
 function toggleLogoutButton() {
     const logoutButton = document.getElementById('actual-logout-button');
     if (logoutButton) {
-        logoutButton.style.display = isLogoutVisible ? 'none' : 'block';
-        isLogoutVisible = !isLogoutVisible;
+        logoutButton.style.display = visible ? 'none' : 'block';
+        visible = !visible;
     }
 }
 
 function logout() {
-    console.log("logout called"); // Check if this is logged
-    localStorage.removeItem('loggedInUser'); // Clear local storage on logout
-    updateLoginUI(); // Update the UI to show the sign-in button again
-    location.reload(); // Simple page reload for now
+    console.log("logout called");
+    localStorage.removeItem('loggedInUser');
+    updateLoginUI();
+    location.reload();
 }
 
+// standard decoding function for JWT
 function parseJwt(token) {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -185,9 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("DOMContentLoaded event fired");
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         initializeGoogleSignIn();
-        updateLoginUI(); // Initial call to set up the button or user info based on local storage
+        updateLoginUI();
     } else {
-        console.error("Google Identity Services library not loaded properly.");
-        // Optionally display a message to the user about the login failure
+        console.error("very bad error");
     }
 });
