@@ -58,6 +58,14 @@ CREATE TABLE IF NOT EXISTS relay_result (
     PRIMARY KEY (event_id, types, athlete_id)
 );
 
+CREATE TABLE IF NOT EXISTS leaderboard (
+	event_id INTEGER NOT NULL,
+	athlete_id TEXT,
+	rank INTEGER,
+    house TEXT,              -- for easy house point calculation
+    PRIMARY KEY (event_id, athlete_id)
+);
+
 
 INSERT INTO stu_info (stu_id, name, class, clno, gender, dob, gmail, house)
 VALUES (20201033, 'Fung Ching', '5D', 6, 'M', '2008-05-31', 's20201033@carmelss.edu.hk', 'Virtue');

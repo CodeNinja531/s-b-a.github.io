@@ -4,6 +4,61 @@ import sqlite3
 
 DB_PATH = "database\Sports day helper"
 
+def update_leaderboard():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM leaderboard")
+    cursor.execute("SELECT event_id, item, grade, gender, category FROM event WHERE status='Completed'")
+    events = cursor.fetchall()
+    for event_id, item, grade, gender, category in events:
+        if category == "racing":
+            cursor.execute("""
+                SELECT rr.athlete_id, s.name, rr.time, s.house
+                FROM racing_result rr
+                LEFT JOIN participants p ON rr.athlete_id = p.athlete_id
+                LEFT JOIN stu_info s ON p.stu_id = s.stu_id
+                WHERE rr.event_id=? AND rr.types='final'
+                ORDER BY rr.time ASC
+            """, (event_id,))
+            results = cursor.fetchall()
+            for rank, (athlete_id, name, time, house) in enumerate(results, 1):
+                cursor.execute("""
+                    INSERT INTO leaderboard (event_id, athlete_id, rank, house)
+                    VALUES (?, ?, ?, ?)
+                """, (event_id, athlete_id, rank, house))
+        elif category == "field":
+            cursor.execute("""
+                SELECT fr.athlete_id, s.name, MAX(fr.distance) as best_distance, s.house
+                FROM field_result fr
+                LEFT JOIN participants p ON fr.athlete_id = p.athlete_id
+                LEFT JOIN stu_info s ON p.stu_id = s.stu_id
+                WHERE fr.event_id=? AND fr.types='final'
+                GROUP BY fr.athlete_id
+                ORDER BY best_distance DESC
+            """, (event_id,))
+            results = cursor.fetchall()
+            for rank, (athlete_id, name, distance, house) in enumerate(results, 1):
+                cursor.execute("""
+                    INSERT INTO leaderboard (event_id, athlete_id, rank, house)
+                    VALUES (?, ?, ?, ?)
+                """, (event_id, athlete_id, rank, house))
+        elif category == "relay":
+            cursor.execute("""
+                SELECT team, time
+                FROM relay_result
+                WHERE event_id=? AND types='overall'
+                ORDER BY time ASC
+            """, (event_id,))
+            results = cursor.fetchall()
+            for rank, (team, time) in enumerate(results, 1):
+                # For relay, team name is used as athlete_id, house is team
+                cursor.execute("""
+                    INSERT INTO leaderboard (event_id, athlete_id, rank, house)
+                    VALUES (?, ?, ?, ?)
+                """, (event_id, team, rank, team))
+    conn.commit()
+    conn.close()
+
 class ResultDisplayApp:
     def __init__(self, master):
         self.master = master
@@ -42,56 +97,43 @@ class ResultDisplayApp:
     def _populate_results(self, parent):
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
+        # Get all completed events
         cursor.execute("SELECT event_id, item, grade, gender, category FROM event WHERE status='Completed'")
         events = cursor.fetchall()
         for event_id, item, grade, gender, category in events:
             event_label = ttk.Label(parent, text=f"Event: {item} | Grade: {grade} | Gender: {gender} | Category: {category}",
                                     font=("Arial", 13, "bold"), foreground="#1e293b", padding=(0, 10, 0, 2))
             event_label.pack(anchor="w")
+            # Display leaderboard for this event (directly from leaderboard table)
+            cursor.execute("""
+                SELECT athlete_id, rank, house
+                FROM leaderboard
+                WHERE event_id=?
+                ORDER BY rank ASC
+            """, (event_id,))
+            results = cursor.fetchall()
+            # Try to get name for athlete_id if possible (for racing/field)
+            display_rows = []
+            for athlete_id, rank, house in results:
+                name = "-"
+                if category in ("racing", "field"):
+                    cursor.execute("SELECT s.name FROM participants p LEFT JOIN stu_info s ON p.stu_id = s.stu_id WHERE p.athlete_id=? LIMIT 1", (athlete_id,))
+                    name_row = cursor.fetchone()
+                    if name_row and name_row[0]:
+                        name = name_row[0]
+                if category == "racing" or category == "field":
+                    display_rows.append((rank, name, athlete_id, house))
+                elif category == "relay":
+                    display_rows.append((rank, athlete_id, house))
             if category == "racing":
-                cursor.execute("""
-                    SELECT rr.athlete_id, s.name, rr.time
-                    FROM racing_result rr
-                    LEFT JOIN participants p ON rr.athlete_id = p.athlete_id
-                    LEFT JOIN stu_info s ON p.stu_id = s.stu_id
-                    WHERE rr.event_id=? AND rr.types='final'
-                    ORDER BY rr.time ASC
-                """, (event_id,))
-                results = cursor.fetchall()
-                columns = ("Rank", "Name", "Athlete ID", "Time (s)")
-                self._create_table(parent, columns, [
-                    (i+1, name or "-", athlete_id, time)
-                    for i, (athlete_id, name, time) in enumerate(results)
-                ])
+                columns = ("Rank", "Name", "Athlete ID", "House")
+                self._create_table(parent, columns, display_rows)
             elif category == "field":
-                cursor.execute("""
-                    SELECT fr.athlete_id, s.name, MAX(fr.distance) as best_distance
-                    FROM field_result fr
-                    LEFT JOIN participants p ON fr.athlete_id = p.athlete_id
-                    LEFT JOIN stu_info s ON p.stu_id = s.stu_id
-                    WHERE fr.event_id=? AND fr.types='final'
-                    GROUP BY fr.athlete_id
-                    ORDER BY best_distance DESC
-                """, (event_id,))
-                results = cursor.fetchall()
-                columns = ("Rank", "Name", "Athlete ID", "Best Distance (m)")
-                self._create_table(parent, columns, [
-                    (i+1, name or "-", athlete_id, distance)
-                    for i, (athlete_id, name, distance) in enumerate(results)
-                ])
+                columns = ("Rank", "Name", "Athlete ID", "House")
+                self._create_table(parent, columns, display_rows)
             elif category == "relay":
-                cursor.execute("""
-                    SELECT athlete_id, team, time
-                    FROM relay_result
-                    WHERE event_id=? AND types='overall'
-                    ORDER BY time ASC
-                """, (event_id,))
-                results = cursor.fetchall()
-                columns = ("Rank", "Team", "Time (s)")
-                self._create_table(parent, columns, [
-                    (i+1, team, time)
-                    for i, (athlete_id, team, time) in enumerate(results)
-                ])
+                columns = ("Rank", "Team", "House")
+                self._create_table(parent, columns, display_rows)
         conn.close()
 
     def _create_table(self, parent, columns, rows):
@@ -106,6 +148,7 @@ class ResultDisplayApp:
         tree.pack(fill="x", expand=True)
 
 if __name__ == "__main__":
+    update_leaderboard()
     root = tk.Tk()
     app = ResultDisplayApp(root)
     root.mainloop()
