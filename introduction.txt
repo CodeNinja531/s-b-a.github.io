@@ -1,0 +1,73 @@
+---
+
+## 10-Minute Introduction Script for SBA Sports Day Helper
+
+**[Slide 1: Introduction]**
+Hello everyone, today I will introduce my Sports Day Helper web application, developed for my S5 ICT SBA. This project aims to streamline the management of school sports day events, from registration to result keeping and achievement tracking.
+
+**[Slide 2: System Overview]**
+The system is a web-based application, with a backend database, and several tools for different user roles: students, teachers, and event organizers. The main modules are:
+- Registration
+- Record Keeping
+- Results & Achievements
+- Event Map
+- Announcers, Assembly, Notifications (future/optional)
+
+**[Slide 3: Database Design]**
+At the core is an SQLite database, with tables for:
+- `stu_info`: student information (ID, name, class, gender, house, etc.)
+- `event`: all sports events, with grade, gender, item, and category (racing, field, relay)
+- `participants`: links students to events via athlete IDs
+- `racing_result`, `field_result`, `relay_result`: store results for each event type
+- `leaderboard`: stores rankings for completed events
+
+This structure allows efficient queries for registration, result entry, and reporting.
+
+**[Slide 4: Registration Function**
+Students register for events using a Tkinter GUI (`registration.py`). The app:
+- Loads student info from the database
+- Determines the correct sports group (e.g., Boy's B Grade) based on DOB and gender
+- Shows available racing and field events for the group
+- Enforces limits (max 2 racing, 2 field, 3 total)
+- Saves registrations to the database, assigning unique athlete IDs
+
+**[Slide 5: Record Keeper Tools]**
+Record keepers use either a web interface (`record-keeper.html`) or a Tkinter app (`record keeping.py`) to enter results:
+- Select event type, grade, gender, and item
+- For racing: enter heat/final, athlete ID, and time
+- For field: enter trial number and distance
+- For relay: enter athlete ID, position, team, and time
+- Results are saved to the database, and for relays, the system calculates team totals automatically
+
+**[Slide 6: Results & Achievements]**
+The results module (`result.py`) displays completed event results:
+- Shows rankings for each event, with names, athlete IDs, and houses
+- Leaderboards are updated automatically based on best times/distances
+- Relay results show team rankings
+
+**[Slide 7: OLE Record Export]**
+A special script (`OLE_record.py`) generates an Excel file for OLE records:
+- Collects all student achievements (e.g., Champion, 1st Runner-up)
+- Groups by student, with class and name
+- Outputs a formatted Excel file for easy import into school systems
+
+**[Slide 8: Menu & Navigation]**
+The web app features a sidebar menu (`menu.html`) for easy navigation:
+- Registration, Record Keeper, Results, Map, and more
+- Home page introduces the system and provides quick access
+
+**[Slide 9: Authentication & Security]**
+Google authentication is integrated for user login, ensuring only authorized users can access sensitive functions.
+
+**[Slide 10: Database Example]**
+The database is initialized with sample data for students and events. All event types and grades are covered, and the schema supports future expansion.
+
+**[Slide 11: Demo (Optional)]**
+[Show a quick demo of registration, result entry, and viewing results.]
+
+**[Slide 12: Conclusion]**
+In summary, my SBA project provides a complete solution for managing school sports day events, from registration to result tracking and reporting. It is modular, database-driven, and user-friendly for both students and staff.
+
+Thank you for your attention!
+
+---

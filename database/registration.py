@@ -217,9 +217,10 @@ class SportsRegistrationApp:
         self.user_info_frame.grid(row=2, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
         self.user_info_frame.grid_columnconfigure(0, weight=1)
 
-        ttk.Label(self.user_info_frame, text=f"Class: {self.class_info}", font=("Inter", 10, "bold")).grid(row=0, column=0, sticky="w", pady=1) # Reduced pady
-        ttk.Label(self.user_info_frame, text=f"Class No.: {self.class_number}", font=("Inter", 10, "bold")).grid(row=1, column=0, sticky="w", pady=1) # Reduced pady
-        ttk.Label(self.user_info_frame, text=f"Name: {self.name}", font=("Inter", 10, "bold")).grid(row=2, column=0, sticky="w", pady=1)
+        ttk.Label(self.user_info_frame, text=f"Student ID: {self.user_info['stu_id']}", font=("Inter", 10, "bold")).grid(row=0, column=0, sticky="w", pady=1)
+        ttk.Label(self.user_info_frame, text=f"Class: {self.class_info}", font=("Inter", 10, "bold")).grid(row=1, column=0, sticky="w", pady=1) # Reduced pady
+        ttk.Label(self.user_info_frame, text=f"Class No.: {self.class_number}", font=("Inter", 10, "bold")).grid(row=2, column=0, sticky="w", pady=1) # Reduced pady
+        ttk.Label(self.user_info_frame, text=f"Name: {self.name}", font=("Inter", 10, "bold")).grid(row=3, column=0, sticky="w", pady=1)
         house_colors = {
             'Virtue': 'red',
             'Trust': 'green',
@@ -229,7 +230,7 @@ class SportsRegistrationApp:
         house = self.user_info['house']
         house_color = house_colors.get(house.capitalize(), 'black')
         house_row_frame = ttk.Frame(self.user_info_frame)
-        house_row_frame.grid(row=3, column=0, sticky="w", pady=1)
+        house_row_frame.grid(row=4, column=0, sticky="w", pady=1)
         ttk.Label(house_row_frame, text="House:", font=("Inter", 10, "bold")).pack(side="left")
         ttk.Label(house_row_frame, text=house, font=("Inter", 10, "bold"), foreground=house_color).pack(side="left")
 

@@ -12,13 +12,15 @@ def update_leaderboard():
     events = cursor.fetchall()
     for event_id, item, grade, gender, category in events:
         if category == "racing":
+            # Only select the best (fastest) time per athlete for this event
             cursor.execute("""
-                SELECT rr.athlete_id, s.name, rr.time, s.house
+                SELECT rr.athlete_id, s.name, MIN(rr.time) as best_time, s.house
                 FROM racing_result rr
                 LEFT JOIN participants p ON rr.athlete_id = p.athlete_id
                 LEFT JOIN stu_info s ON p.stu_id = s.stu_id
                 WHERE rr.event_id=? AND rr.types='final'
-                ORDER BY rr.time ASC
+                GROUP BY rr.athlete_id
+                ORDER BY best_time ASC
             """, (event_id,))
             results = cursor.fetchall()
             for rank, (athlete_id, name, time, house) in enumerate(results, 1):
@@ -27,6 +29,7 @@ def update_leaderboard():
                     VALUES (?, ?, ?, ?)
                 """, (event_id, athlete_id, rank, house))
         elif category == "field":
+            # Only select the best (longest) distance per athlete for this event
             cursor.execute("""
                 SELECT fr.athlete_id, s.name, MAX(fr.distance) as best_distance, s.house
                 FROM field_result fr

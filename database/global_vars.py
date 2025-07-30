@@ -4,14 +4,6 @@ from datetime import datetime
 
 date_for_age_comparison = datetime(2024, 9, 1)
 
-debug_gmails = [
-    's20201033@carmelss.edu.hk',
-    's20011313@carmelss.edu.hk',
-    's20122020@carmelss.edu.hk',
-    's20229999@carmelss.edu.hk',
-    's20242009@carmelss.edu.hk'
-]
-
 racing_events_data = {
     'A': ["100m", "200m", "400m", "800m", "1500m"],
     'B': ["100m", "200m", "400m", "800m", "1500m"],

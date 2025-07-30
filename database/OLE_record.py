@@ -3,7 +3,11 @@ import pandas as pd
 from collections import defaultdict
 import os
 from openpyxl import load_workbook
+from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
+import re
 
+# Database path
 DB_PATH = "database/Sports day helper"
 
 # Connect to the database
@@ -64,7 +68,6 @@ for row in rows:
 def class_sort_key(cls):
     # Assumes class format like '1A', '2B', etc.
     # Splits into (grade:int, section:str)
-    import re
     m = re.match(r"(\d+)([A-D])", cls)
     if m:
         grade = int(m.group(1))
@@ -77,37 +80,36 @@ excel_rows = []
 # Sort students by class, clno, name
 sorted_students = sorted(student_awards.items(), key=lambda x: (class_sort_key(x[0][0]), int(x[0][1]), x[0][2]))
 for (cls, clno, name), awards in sorted_students:
-    # Only show up to 5 awards per student
-    awards = awards[:5]
-    # Format: <award> in <event name>
-    award_lines = [f"{a[0]} in {a[1]}" for a in awards]
-    award_cell = '\n'.join(award_lines) if award_lines else ''
-    excel_rows.append([cls, clno, name, 'participant', award_cell])
-    # Add a blank line after each student
+    for award, event_name in awards:
+        # Create a row for each award
+        excel_rows.append([cls, clno, name, 'participant', f"{award} in {event_name}"])
+    # Add a blank row after each student
     excel_rows.append(['', '', '', '', ''])
 
+# Output file name
 output_file = 'OLE.xlsx'
 if os.path.exists(output_file):
     os.remove(output_file)
 
+# Write to Excel
 df = pd.DataFrame(excel_rows, columns=['Class', 'Clno', 'Name', 'Role', 'Award'])
 
 with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+    # Title row
     pd.DataFrame([["Sports Day OLE Record"]]).to_excel(writer, index=False, header=False)
+    # Student award rows
     df.to_excel(writer, index=False, startrow=1)
 
-
+# Style the Excel sheet
 wb = load_workbook(output_file)
 ws = wb.active
 ws.merge_cells('A1:E1')
 
 # Set title font style
-from openpyxl.styles import Font
 ws['A1'].font = Font(size=20, bold=True)
 
 ws.freeze_panes = 'A3'
 
-from openpyxl.utils import get_column_letter
 for col in range(1, 6):
     max_length = 0
     col_letter = get_column_letter(col)
@@ -120,6 +122,8 @@ for col in range(1, 6):
             max_length = max(max_length, len(cell_value))
     ws.column_dimensions[col_letter].width = max_length + 2
 
+# Save the updated workbook
 wb.save(output_file)
 
+# Close the database connection
 conn.close()

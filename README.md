@@ -7,3 +7,4 @@ This is a website for helping with the school Sports day
 
 Current problems:
 The database function is not fully implemented
+
