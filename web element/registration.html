@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
-    <script src="auth.js"></script>
+    <script src="script.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             fetch("menu.html")
@@ -16,15 +16,15 @@
                     document.getElementById("menu-container").innerHTML = html;
                 });
             const loginPrompt = document.getElementById("loginPrompt");
-            const userInfo = getUserInfo(); // Get user info from auth.js
+            const userInfo = getUserInfo();
             const userInfoDiv = document.getElementById("user-info");
 
             if (!userInfo) {
-                // User is not logged in, show the login prompt and hide the registration
+                // Not logged in
                 if (userInfoDiv) userInfoDiv.style.display = "none";
                 if (loginPrompt) loginPrompt.style.display = "block";
             } else {
-                // User is logged in, hide the login prompt and display the registration
+                // display
                 if (loginPrompt) loginPrompt.style.display = "none";
                 if (userInfoDiv) {
                     userInfoDiv.style.display = "block";
@@ -69,7 +69,6 @@
                         C: ["High Jump", "Long Jump", "Shot Put", "Softball"]
                     };
 
-                    // --- Show event items immediately with default gender as male ---
                     const genderSelect = document.getElementById("gender");
                     const updateEvents = () => {
                         const gender = genderSelect.value === "male" ? "Boy's" :
@@ -140,7 +139,6 @@
                         });
                     };
 
-                    // Show events immediately with default gender as male
                     updateEvents();
 
                     genderSelect.addEventListener("change", updateEvents);
@@ -209,7 +207,7 @@
 </head>
 <body>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='SBA test.html'">Home</button>
+    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='home.html'">Home</button>
     <div id="menu-container"></div>
 
     <main>

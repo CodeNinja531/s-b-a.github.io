@@ -95,6 +95,8 @@ class ResultDisplayApp:
         )
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
+        # Make the canvas expand vertically with the window
+        master.grid_rowconfigure(1, weight=1)
         self._populate_results(scrollable_frame)
 
     def _populate_results(self, parent):
@@ -142,7 +144,8 @@ class ResultDisplayApp:
     def _create_table(self, parent, columns, rows):
         frame = ttk.Frame(parent)
         frame.pack(anchor="w", fill="x", pady=(0, 15))
-        tree = ttk.Treeview(frame, columns=columns, show="headings", height=min(10, len(rows)+1))
+        # Set height to exactly fit all rows (minimum 1 for header)
+        tree = ttk.Treeview(frame, columns=columns, show="headings", height=max(1, len(rows)))
         for col in columns:
             tree.heading(col, text=col)
             tree.column(col, width=120, anchor="center")

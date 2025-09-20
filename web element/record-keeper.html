@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Record Keeper Tools</title>
-    <link rel="stylesheet" href="style.css"> <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
-    <script src="auth.js"></script>
-    <!-- Add Firebase SDKs -->
+    <script src="script.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script>
@@ -28,7 +27,7 @@
 <body>
     <div id="menu-container"></div>
     
-    <button class="home-btn" onclick="location.href='SBA test.html'">Home</button>
+    <button class="home-btn" onclick="location.href='home.html'">Home</button>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
 
     <main>
@@ -121,11 +120,9 @@
             const gradeSelect = document.getElementById("grade");
             const genderSelect = document.getElementById("gender");
             const itemsSelect = document.getElementById("items");
-            // Remove old trackSelectContainer/trackSelect creation
             const trackNoContainer = document.getElementById("track-no-container");
             const trackSelect = document.getElementById("track");
 
-            // Event data for dropdowns (this is client-side, typically fetched from backend)
             const racingEvents = {
                 A: ["100m", "200m", "400m", "800m", "1500m"],
                 B: ["100m", "200m", "400m", "800m", "1500m"],
@@ -140,23 +137,21 @@
 
             const relayEvents = ["4x100", "4x400", "8x100"];
 
-            // Function to map form gender to database gender
             const mapGenderToDB = (formGender) => {
                 if (formGender === 'male') return 'boys';
                 if (formGender === 'female') return 'girls';
-                return formGender; // Return as is if no mapping
+                return formGender;
             };
 
-            // --- Persistence Functions ---
             const saveSelections = () => {
                 localStorage.setItem('selectedType', typeSelect.value);
                 localStorage.setItem('selectedGrade', gradeSelect.value);
                 localStorage.setItem('selectedGender', genderSelect.value);
                 localStorage.setItem('selectedItem', itemsSelect.value);
-                if (trackNoContainer.style.display === 'block') { // Only save track if visible
+                if (trackNoContainer.style.display === 'block') {
                     localStorage.setItem('selectedTrack', trackSelect.value);
                 } else {
-                    localStorage.removeItem('selectedTrack'); // Clear if not applicable
+                    localStorage.removeItem('selectedTrack');
                 }
             };
 
@@ -170,13 +165,9 @@
                 if (storedType) typeSelect.value = storedType;
                 if (storedGrade) gradeSelect.value = storedGrade;
                 if (storedGender) genderSelect.value = storedGender;
+                updateItemsDropdown(false);
 
-                // Update items dropdown based on loaded type, grade, gender
-                updateItemsDropdown(false); // Do not trigger saveSelections here
-
-                // Now set the item and track, after options are populated
                 if (storedItem) itemsSelect.value = storedItem;
-                // Trigger item change to show/hide track field correctly
                 const event = new Event('change');
                 itemsSelect.dispatchEvent(event);
 
@@ -190,7 +181,6 @@
                 const grade = gradeSelect.value;
                 const gender = genderSelect.value;
                 itemsSelect.innerHTML = `<option value="" selected>--</option>`;
-                // Hide track dropdown by default
                 trackNoContainer.style.display = "none";
 
                 if (type && grade && gender) {
@@ -216,7 +206,6 @@
 
             itemsSelect.addEventListener("change", () => {
                 const selectedItem = itemsSelect.value;
-                // Show track dropdown only for racing 100m, 200m, 400m
                 if (["100m", "200m", "400m"].includes(selectedItem)) {
                     trackNoContainer.style.display = "block";
                 } else {
@@ -226,12 +215,12 @@
                 updateResultForm();
             });
 
-            // Add change listeners for all main dropdowns to save their state
+            // listeners for dropdowns
             typeSelect.addEventListener("change", () => { updateItemsDropdown(); });
             gradeSelect.addEventListener("change", () => { updateItemsDropdown(); });
             genderSelect.addEventListener("change", () => { updateItemsDropdown(); });
             trackSelect.addEventListener("change", saveSelections);
-            // --- Rest of your script.js remains the same ---
+
             const resultForm = document.getElementById("result-form");
             const resultFields = document.getElementById("result-fields");
             const resultMessage = document.getElementById("result-message");
@@ -315,9 +304,7 @@
                 resultFields.innerHTML = html;
             }
 
-            // Call loadSelections immediately after initial setup
             loadSelections(); 
-            // And then update form based on loaded selections
             updateResultForm();
 
             resultForm.addEventListener("submit", async function(e) {
@@ -347,7 +334,6 @@
                 const formData = new FormData(resultForm);
                 const data = Object.fromEntries(formData.entries());
 
-                // Prepare result data according to schema in database.txt
                 let resultData = {
                     event_key: eventKey,
                     grade: grade,
@@ -382,6 +368,7 @@
                     resultData.athlete_id = data.athlete_id;
                     resultData.trial = parseInt(data.trial);
                     resultData.distance = parseFloat(data.distance);
+
                     // field_result: event_key/types/athlete_id
                     db.ref(`field_result/${eventKey}/${data.types}/${data.athlete_id}`).set(resultData)
                         .then(() => {
@@ -404,6 +391,7 @@
                     resultData.position = parseInt(data.position);
                     resultData.team = data.team;
                     resultData.time = parseFloat(data.time);
+
                     // relay_result: event_key/types/athlete_id
                     db.ref(`relay_result/${eventKey}/individual/${data.athlete_id}`).set(resultData)
                         .then(() => {

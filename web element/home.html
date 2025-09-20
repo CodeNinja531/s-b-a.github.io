@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
-    <script src="auth.js"></script>
+    <script src="script.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             fetch("menu.html")
@@ -20,14 +20,14 @@
 </head>
 <body>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='SBA test.html'">Home</button>
+    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='home.html'">Home</button>
     <div id="menu-container"></div>
 
     <main>
         <header>
-            <h1>Event Management System</h1>
+            <h1>Sportsday Helper System</h1>
         </header>
-        <p>Welcome to the Event Management App. Use the menu to navigate to different sections.</p>
+        <p>Welcome to the Sportsday Helper System. Use the menu to navigate to different sections.</p>
     </main>
 
     <div class="auth-buttons">
