@@ -1,22 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--Page setup-->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Schedule</title>
+    <title>House Points</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
     <script src="script.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            fetch("menu.html")
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById("menu-container").innerHTML = html;
-                });
-        });
-    </script>
+    <!--------------------------------------------->
 </head>
 <body>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>

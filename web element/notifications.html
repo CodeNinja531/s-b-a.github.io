@@ -1,27 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--Page setup-->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifications & Updates</title>
+    <title>House Points</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
     <script src="script.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            fetch("menu.html")
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById("menu-container").innerHTML = html;
-                });
-        });
-    </script>
 </head>
+
 <body>
-    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='home.html'">Home</button>
-    <div id="menu-container"></div>
+    <iframe src="menu.html" id="menu-frame" title="Site menu"
+        style="position:fixed; top:10px; left:10px; width: 80px; height: 100%; border: 0; z-index: 9999;"
+        aria-hidden="false">
+    </iframe>
 
     <main>
         <h1>Notifications & Updates</h1>

@@ -8,57 +8,48 @@
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
     <script src="script.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            fetch("menu.html")
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById("menu-container").innerHTML = html;
-                });
-        });
-    </script>
 </head>
 <body>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='home.html'">Home</button>
+    <a href="home.html"><button class="toggle-btn" style="bottom: 60px;">Home</button></a>
     <div id="menu-container"></div>
     
     <main>
         <h1>Results & Achievements</h1>
         <p>This page displays results and achievements of participants.</p>
-        <section style="margin-top:30px;">
+        <section style="margin-top:30px">
             <h2>Boys A 100m Final</h2>
-            <table style="width:100%; border-collapse:collapse;">
+            <table style="width:100%; border-collapse:collapse">
                 <thead>
                     <tr>
-                        <th style="border:1px solid #ccc; padding:8px;">Rank</th>
-                        <th style="border:1px solid #ccc; padding:8px;">Name</th>
-                        <th style="border:1px solid #ccc; padding:8px;">Class</th>
-                        <th style="border:1px solid #ccc; padding:8px;">Athlete ID</th>
-                        <th style="border:1px solid #ccc; padding:8px;">Time (s)</th>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Class</th>
+                        <th>Athlete ID</th>
+                        <th>Time (s)</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="border:1px solid #ccc; padding:8px;">1</td>
-                        <td style="border:1px solid #ccc; padding:8px;">David Lam</td>
-                        <td style="border:1px solid #ccc; padding:8px;">4D</td>
-                        <td style="border:1px solid #ccc; padding:8px;">0003</td>
-                        <td style="border:1px solid #ccc; padding:8px;">12.34</td>
+                        <td>1</td>
+                        <td>David</td>
+                        <td>2D</td>
+                        <td>0003</td>
+                        <td>12.34</td>
                     </tr>
                     <tr>
-                        <td style="border:1px solid #ccc; padding:8px;">2</td>
-                        <td style="border:1px solid #ccc; padding:8px;">Bob Chan</td>
-                        <td style="border:1px solid #ccc; padding:8px;">2B</td>
-                        <td style="border:1px solid #ccc; padding:8px;">0002</td>
-                        <td style="border:1px solid #ccc; padding:8px;">12.67</td>
+                        <td>2</td>
+                        <td>Bob</td>
+                        <td>2B</td>
+                        <td>0002</td>
+                        <td>12.67</td>
                     </tr>
                     <tr>
-                        <td style="border:1px solid #ccc; padding:8px;">3</td>
-                        <td style="border:1px solid #ccc; padding:8px;">Alice Lee</td>
-                        <td style="border:1px solid #ccc; padding:8px;">1A</td>
-                        <td style="border:1px solid #ccc; padding:8px;">0001</td>
-                        <td style="border:1px solid #ccc; padding:8px;">13.01</td>
+                        <td>3</td>
+                        <td>Tom</td>
+                        <td>1A</td>
+                        <td>0001</td>
+                        <td>13.01</td>
                     </tr>
                 </tbody>
             </table>

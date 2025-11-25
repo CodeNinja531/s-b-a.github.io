@@ -5,31 +5,33 @@ import sqlite3
 DB_PATH = "database\Sports day helper"
 
 def update_leaderboard():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    connect = sqlite3.connect(DB_PATH)
+    cursor = connect.cursor()
     cursor.execute("DELETE FROM leaderboard")
     cursor.execute("SELECT event_id, item, grade, gender, category FROM event WHERE status='Completed'")
+
     events = cursor.fetchall()
     for event_id, item, grade, gender, category in events:
         if category == "racing":
-            # Only select the best (fastest) time per athlete for this event
+            # fastest player
             cursor.execute("""
-                SELECT rr.athlete_id, s.name, MIN(rr.time) as best_time, s.house
-                FROM racing_result rr
-                LEFT JOIN participants p ON rr.athlete_id = p.athlete_id
+                SELECT racing_result.athlete_id, s.name, MIN(racing_result.time) as best_time, s.house
+                FROM racing_result
+                LEFT JOIN participants p ON racing_result.athlete_id = p.athlete_id
                 LEFT JOIN stu_info s ON p.stu_id = s.stu_id
-                WHERE rr.event_id=? AND rr.types='final'
-                GROUP BY rr.athlete_id
+                WHERE racing_result.event_id=? AND racing_result.types='final'
+                GROUP BY racing_result.athlete_id
                 ORDER BY best_time ASC
             """, (event_id,))
             results = cursor.fetchall()
+
             for rank, (athlete_id, name, time, house) in enumerate(results, 1):
                 cursor.execute("""
                     INSERT INTO leaderboard (event_id, athlete_id, rank, house)
                     VALUES (?, ?, ?, ?)
                 """, (event_id, athlete_id, rank, house))
+
         elif category == "field":
-            # Only select the best (longest) distance per athlete for this event
             cursor.execute("""
                 SELECT fr.athlete_id, s.name, MAX(fr.distance) as best_distance, s.house
                 FROM field_result fr
@@ -39,12 +41,14 @@ def update_leaderboard():
                 GROUP BY fr.athlete_id
                 ORDER BY best_distance DESC
             """, (event_id,))
+
             results = cursor.fetchall()
             for rank, (athlete_id, name, distance, house) in enumerate(results, 1):
                 cursor.execute("""
                     INSERT INTO leaderboard (event_id, athlete_id, rank, house)
                     VALUES (?, ?, ?, ?)
                 """, (event_id, athlete_id, rank, house))
+
         elif category == "relay":
             cursor.execute("""
                 SELECT team, time
@@ -52,15 +56,16 @@ def update_leaderboard():
                 WHERE event_id=? AND types='overall'
                 ORDER BY time ASC
             """, (event_id,))
+
             results = cursor.fetchall()
             for rank, (team, time) in enumerate(results, 1):
-                # For relay, team name is used as athlete_id, house is team
                 cursor.execute("""
                     INSERT INTO leaderboard (event_id, athlete_id, rank, house)
                     VALUES (?, ?, ?, ?)
                 """, (event_id, team, rank, team))
-    conn.commit()
-    conn.close()
+                
+    connect.commit()
+    connect.close()
 
 class ResultDisplayApp:
     def __init__(self, master):
@@ -100,8 +105,8 @@ class ResultDisplayApp:
         self._populate_results(scrollable_frame)
 
     def _populate_results(self, parent):
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
+        connect = sqlite3.connect(DB_PATH)
+        cursor = connect.cursor()
         # Get all completed events
         cursor.execute("SELECT event_id, item, grade, gender, category FROM event WHERE status='Completed'")
         events = cursor.fetchall()
@@ -139,7 +144,7 @@ class ResultDisplayApp:
             elif category == "relay":
                 columns = ("Rank", "Team", "House")
                 self._create_table(parent, columns, display_rows)
-        conn.close()
+        connect.close()
 
     def _create_table(self, parent, columns, rows):
         frame = ttk.Frame(parent)

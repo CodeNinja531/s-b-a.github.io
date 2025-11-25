@@ -2,6 +2,7 @@ let userEmail = '';
 let googleClientId = '992447656779-odg7cr1em2rct7p4oe2e4bistsdihisc.apps.googleusercontent.com'; // google clident id
 let visible = false;
 
+// copied from google sites
 function initializeGoogleSignIn() {
     google.accounts.id.initialize({
         client_id: googleClientId,
@@ -139,7 +140,7 @@ function logout() {
     location.reload();
 }
 
-// standard decoding function for JWT
+// standard decoding function for JSON
 function parseJwt(token) {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -171,10 +172,14 @@ function toggleSidebar() {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOMContentLoaded event fired");
+    fetch("menu.html")
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById("menu-container").innerHTML = html;
+    });
+
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         initializeGoogleSignIn();
         updateLoginUI();
-    } else {
-        console.error("very bad error");
     }
 });
