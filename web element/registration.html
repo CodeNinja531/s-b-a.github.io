@@ -16,7 +16,7 @@
     const userInfo = getUserInfo();
     const userInfoDiv = document.getElementById("user-info");
 
-    if (!userInfo) {
+    if (userInfo) {
         // Not logged in
         userInfoDiv.style.display = "none";
         loginPrompt.style.display = "block";
@@ -102,7 +102,8 @@
 
             const racingInputs = document.getElementsByName("racing-event");
             const fieldInputs = document.getElementsByName("field-event");
-
+            
+            // Set limit (data validation)
             const updateSelectionLimits = () => {
                 const selectedRacing = Array.from(racingInputs).filter(input => input.checked).length;
                 const selectedField = Array.from(fieldInputs).filter(input => input.checked).length;
@@ -138,7 +139,7 @@
 
         genderSelect.addEventListener("change", updateEvents);
 
-        // Add event listener for the Submit button
+        // Submit button
         document.getElementById("submit-btn").addEventListener("click", () => {
             const selectedRacing = Array.from(document.getElementsByName("racing-event"))
                                             .filter(input => input.checked)

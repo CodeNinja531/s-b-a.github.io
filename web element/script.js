@@ -2,6 +2,7 @@ let userEmail = '';
 let googleClientId = '992447656779-odg7cr1em2rct7p4oe2e4bistsdihisc.apps.googleusercontent.com'; // google clident id
 let visible = false;
 
+// --------------------------------------------loging in with google account--------------------------------------------
 // copied from google sites
 function initializeGoogleSignIn() {
     google.accounts.id.initialize({
@@ -14,130 +15,6 @@ function initializeGoogleSignIn() {
         document.querySelector('.auth-button'),
         { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
     );
-    console.log("initializeGoogleSignIn called");
-}
-
-function CredentialResponse(response) {
-    const token = response.credential;
-    const user = parseJwt(token);
-
-    // Store user info
-    localStorage.setItem('loggedInUser', JSON.stringify({ email: user.email, name: user.name, picture: user.picture }));
-    console.log("loggedInUser stored in localStorage:", localStorage.getItem('loggedInUser'));
-
-    // Prompt for gender if not already stored
-    if (!localStorage.getItem('userGender')) {
-        const gender = prompt("Please enter your gender (e.g., Male, Female, Other):");
-        if (gender) {
-            localStorage.setItem('userGender', gender);
-        }
-    }
-
-    updateLoginUI();
-
-    fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email })
-    })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Backend login successful:", data);
-        })
-        .catch(err => console.error('Backend login failed:', err));
-}
-
-function updateLoginUI() {
-    const authButtonDiv = document.querySelector('.auth-button');
-    authButtonDiv.innerHTML = '';
-    authButtonDiv.onclick = null;
-
-    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    const userGender = localStorage.getItem('userGender');
-
-    console.log("updateLoginUI called");
-    console.log("loggedInUser from localStorage:", loggedInUser);
-
-    // show logged in user elements
-    if (loggedInUser) {
-        authButtonDiv.style.display = 'flex';
-        authButtonDiv.style.flexDirection = 'row';
-        authButtonDiv.style.alignItems = 'center';
-        authButtonDiv.style.padding = '8px 12px';
-        authButtonDiv.style.backgroundColor = '#2c3e50';
-        authButtonDiv.style.color = 'white';
-        authButtonDiv.style.borderRadius = '5px';
-        authButtonDiv.style.cursor = 'pointer';
-        authButtonDiv.style.gap = '10px';
-
-        // Profile Picture
-        const profileImage = document.createElement('img');
-        profileImage.src = loggedInUser.picture;
-        profileImage.alt = 'Profile Picture';
-        profileImage.style.width = '30px';
-        profileImage.style.height = '30px';
-        profileImage.style.borderRadius = '50%';
-
-        // User Display Name
-        const displayNameSpan = document.createElement('span');
-        displayNameSpan.textContent = loggedInUser.name;
-
-        // Logout Button
-        const logoutButton = document.createElement('button');
-        logoutButton.id = 'actual-logout-button';
-        logoutButton.textContent = 'Logout';
-        logoutButton.style.backgroundColor = '#dc3545';
-        logoutButton.style.color = 'white';
-        logoutButton.style.border = 'none';
-        logoutButton.style.padding = '8px 12px';
-        logoutButton.style.borderRadius = '5px';
-        logoutButton.style.cursor = 'pointer';
-        logoutButton.style.marginLeft = '10px';
-        logoutButton.style.display = 'none';
-        logoutButton.style.alignSelf = 'center';
-        logoutButton.onclick = logout;
-        authButtonDiv.appendChild(profileImage);
-        authButtonDiv.appendChild(displayNameSpan);
-        authButtonDiv.onclick = toggleLogoutButton;
-        authButtonDiv.parentNode.insertBefore(logoutButton, authButtonDiv.nextSibling);
-        visible = false;
-    } else {
-        // sign in button
-        google.accounts.id.renderButton(
-            authButtonDiv,
-            { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
-        );
-        authButtonDiv.style.display = 'inline-block';
-        authButtonDiv.style.flexDirection = '';
-        authButtonDiv.style.alignItems = '';
-        authButtonDiv.style.padding = '';
-        authButtonDiv.style.backgroundColor = '';
-        authButtonDiv.style.color = '';
-        authButtonDiv.style.borderRadius = '';
-        authButtonDiv.style.cursor = 'pointer';
-        authButtonDiv.style.gap = '';
-        authButtonDiv.onclick = null;
-        const existingLogoutButton = document.getElementById('actual-logout-button');
-        if (existingLogoutButton) {
-            existingLogoutButton.remove();
-        }
-        visible = false;
-    }
-}
-
-function toggleLogoutButton() {
-    const logoutButton = document.getElementById('actual-logout-button');
-    if (logoutButton) {
-        logoutButton.style.display = visible ? 'none' : 'block';
-        visible = !visible;
-    }
-}
-
-function logout() {
-    console.log("logout called");
-    localStorage.removeItem('loggedInUser');
-    updateLoginUI();
-    location.reload();
 }
 
 // standard decoding function for JSON
@@ -153,12 +30,103 @@ function parseJwt(token) {
     return JSON.parse(jsonPayload);
 }
 
+function CredentialResponse(response) {
+    const token = response.credential;
+    const user = parseJwt(token);
+
+    // Store user info
+    localStorage.setItem('loggedInUser', JSON.stringify({ email: user.email, name: user.name, picture: user.picture }));
+
+    // Prompt for gender if not already stored
+    if (!localStorage.getItem('userGender')) {
+        const gender = prompt("Please enter your gender (e.g., Male, Female, Other):");
+        if (gender) {
+            localStorage.setItem('userGender', gender);
+        }
+    }
+
+    updateLoginUI();
+    
+    fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+    })
+        .then(res => res.json())
+        .then(data => {
+            console.log("Backend login successful:", data);
+        })
+        .catch(err => console.error('Backend login failed:', err));
+}
+
+// for the login button
+function updateLoginUI() {
+    const authButtonDiv = document.querySelector('.auth-button');
+    authButtonDiv.innerHTML = '';
+    authButtonDiv.onclick = null;
+
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    if (loggedInUser) {
+        // pfp
+        const profileImage = document.createElement('img');
+        profileImage.src = loggedInUser.picture;
+        profileImage.alt = 'Profile Picture';
+        profileImage.style.width = '30px';
+        profileImage.style.height = '30px';
+        profileImage.style.borderRadius = '50%';
+
+        // name
+        const displayNameSpan = document.createElement('span');
+        displayNameSpan.textContent = loggedInUser.name;
+
+        // logout-button
+        const logoutButton = document.createElement('button');
+        logoutButton.classList.add('logout-button');
+        logoutButton.onclick = logout;
+        authButtonDiv.appendChild(profileImage);
+        authButtonDiv.appendChild(displayNameSpan);
+        authButtonDiv.onclick = toggleLogoutButton;
+        authButtonDiv.parentNode.insertBefore(logoutButton, authButtonDiv.nextSibling);
+        visible = false;
+    } else {
+        // google official sign-in button
+        google.accounts.id.renderButton(
+            authButtonDiv,
+            { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
+        );
+        authButtonDiv.innerHTML = '';
+        authButtonDiv.classList.add('auth-button');
+        authButtonDiv.onclick = null;
+        const existingLogoutButton = document.querySelector('.logout-button');
+        if (existingLogoutButton) {
+            existingLogoutButton.remove();
+        }
+        visible = false;
+    }
+}
+
+// --------------------------------------------loging in with google account--------------------------------------------
+
+function toggleLogoutButton() {
+    const logoutButton = document.getElementById('logout-button');
+    if (logoutButton) {
+        logoutButton.style.display = visible ? 'none' : 'block';
+        visible = !visible;
+    }
+}
+
+function logout() {
+    localStorage.removeItem('loggedInUser');
+    updateLoginUI();
+    location.reload();
+}
+
+
 function getUserInfo() {
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     if (loggedInUser && loggedInUser.name) {
         return { displayName: loggedInUser.name };
     } else {
-        console.error("No logged-in user found or user name is missing.");
         return { displayName: null };
     }
 }
@@ -171,7 +139,6 @@ function toggleSidebar() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOMContentLoaded event fired");
     fetch("menu.html")
     .then(response => response.text())
     .then(html => {
