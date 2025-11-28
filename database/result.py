@@ -107,14 +107,13 @@ class ResultDisplayApp:
     def _populate_results(self, parent):
         connect = sqlite3.connect(DB_PATH)
         cursor = connect.cursor()
-        # Get all completed events
+        # find all "completed"
         cursor.execute("SELECT event_id, item, grade, gender, category FROM event WHERE status='Completed'")
         events = cursor.fetchall()
         for event_id, item, grade, gender, category in events:
             event_label = ttk.Label(parent, text=f"Event: {item} | Grade: {grade} | Gender: {gender} | Category: {category}",
                                     font=("Arial", 13, "bold"), foreground="#1e293b", padding=(0, 10, 0, 2))
             event_label.pack(anchor="w")
-            # Display leaderboard for this event (directly from leaderboard table)
             cursor.execute("""
                 SELECT athlete_id, rank, house
                 FROM leaderboard
@@ -122,7 +121,6 @@ class ResultDisplayApp:
                 ORDER BY rank ASC
             """, (event_id,))
             results = cursor.fetchall()
-            # Try to get name for athlete_id if possible (for racing/field)
             display_rows = []
             for athlete_id, rank, house in results:
                 name = "-"
@@ -149,7 +147,6 @@ class ResultDisplayApp:
     def _create_table(self, parent, columns, rows):
         frame = ttk.Frame(parent)
         frame.pack(anchor="w", fill="x", pady=(0, 15))
-        # Set height to exactly fit all rows (minimum 1 for header)
         tree = ttk.Treeview(frame, columns=columns, show="headings", height=max(1, len(rows)))
         for col in columns:
             tree.heading(col, text=col)

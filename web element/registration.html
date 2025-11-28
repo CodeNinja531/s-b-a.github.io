@@ -1,19 +1,29 @@
-    <!-- Inline DOM manipulation / registration script moved to bottom of file -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!--Page setup-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Points</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
+    <script src="script.js"></script>
+</head>
 <body>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <button class="toggle-btn" style="bottom: 60px;" onclick="location.href='home.html'">Home</button>
+    <button class="home-btn" onclick="location.href='home.html'">Home</button>
     <div id="menu-container"></div>
+    <div class="auth"><div class="auth-button"></div></div>
+    <!--------------------------------------------->
 
     <main>
-        <h1>Event Registration</h1>
-        Please <b>login with your school gmail account</b> to continue with your registration
-        <div id="loginPrompt" style="display: block;">Please <b>login with your school gmail account</b> to continue with your registration</div>
-        <div id="user-info" style="display: none;"></div>
+        <h1>Registration</h1>
+        <div id="loginPrompt" style="display: none">
+            <p>Please log in to register for events.</p>
+        </div>
+        <div id="user-info" style="display: none"></div>
     </main>
-
-    <div class="auth-buttons">
-        <div class="auth-button"></div>
-    </div>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const loginPrompt = document.getElementById("loginPrompt");
@@ -93,7 +103,7 @@
                 return;
             }
 
-            // Populate racing events
+            // racing events (convert to HTML in <div>)
             racingDiv.innerHTML = `<h3>Racing Events</h3>`;
             (racingEvents[grade] || []).forEach(event => {
                 racingDiv.innerHTML += `<label>
@@ -102,7 +112,7 @@
                                         </label><br>`;
             });
 
-            // Populate field events
+            // field events (convert to HTML in <div>)
             fieldDiv.innerHTML = `<h3>Field Events</h3>`;
             (fieldEvents[grade] || []).forEach(event => {
                 fieldDiv.innerHTML += `<label>
@@ -155,13 +165,15 @@
                 const name = displayName.slice(5);
 
                 const registrationData = { class: classInfo, class_no: classNumber, name: name, gender: gender, racing_events: selectedRacing, field_events: selectedField, timestamp: Date.now() };
-
+                
+                // save data and display result message
                 const userId = userInfo.id || userInfo.email.replace(/[.#$\[\]]/g, '_');
                 const submitButton = document.getElementById("submit-btn");
                 let resultMessage = document.getElementById("result-message");
                 if (!resultMessage) { resultMessage = document.createElement("div"); resultMessage.id = "result-message"; submitButton.parentNode.insertBefore(resultMessage, submitButton.nextSibling); }
-                resultMessage.textContent = ""; resultMessage.className = "";
-                submitButton.disabled = true; submitButton.textContent = "Submitting...";
+                resultMessage.textContent = "";
+                resultMessage.className = "";
+                submitButton.disabled = true;
 
                 db.ref('registrations/' + userId).set(registrationData)
                 .then(() => { resultMessage.textContent = "Registration submitted successfully!"; resultMessage.classList.add("success"); })

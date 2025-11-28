@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--Page setup-->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results & Achievements</title>
+    <title>House Points</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
@@ -11,12 +12,13 @@
 </head>
 <body>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-    <a href="home.html"><button class="toggle-btn" style="bottom: 60px;">Home</button></a>
+    <button class="home-btn" onclick="location.href='home.html'">Home</button>
     <div id="menu-container"></div>
+    <div class="auth"><div class="auth-button"></div></div>
+    <!--------------------------------------------->
     
     <main>
         <h1>Results & Achievements</h1>
-        <p>This page displays results and achievements of participants.</p>
         <section style="margin-top:30px">
             <h2>Boys A 100m Final</h2>
             <table style="width:100%; border-collapse:collapse">
@@ -55,8 +57,5 @@
             </table>
         </section>
     </main>
-    <div class="auth-buttons">
-        <div class="auth-button"></div>
-    </div>
 </body>
 </html>

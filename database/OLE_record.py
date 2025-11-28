@@ -1,20 +1,18 @@
 import sqlite3
 import pandas as pd
-from collections import defaultdict
+import collections
 import os
-from openpyxl import load_workbook
-from openpyxl.styles import Font
-from openpyxl.utils import get_column_letter
+import openpyxl
 import re
 
 # Database path
 DB_PATH = "database/Sports day helper"
 
-# Connect to the database
+# Connect
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
-# Query to get class, clno, student name, event, gender, grade, and ranking
+# SQL query
 query = """
 SELECT
     stu_info.class AS Class,
@@ -25,7 +23,8 @@ SELECT
     event.grade AS Grade,
     leaderboard.rank AS Ranking
 FROM leaderboard
-JOIN participants ON leaderboard.athlete_id = participants.athlete_id AND leaderboard.event_id = participants.event_id
+JOIN participants ON leaderboard.athlete_id = participants.athlete_id
+ AND leaderboard.event_id = participants.event_id
 JOIN stu_info ON participants.stu_id = stu_info.stu_id
 JOIN event ON leaderboard.event_id = event.event_id
 ORDER BY stu_info.class, stu_info.clno, stu_info.name, leaderboard.rank
@@ -49,11 +48,19 @@ def rank_to_award(rank):
     else:
         return f"{rank}th Place"
 
-# Group by student (class, clno, name)
-student_awards = defaultdict(list)
+
+def class_sort_key(class_name):
+    # Assumes class format like '1A', '2B', etc.
+    # Splits into (grade:int, section:str)
+    m = re.match(r"(\d+)([A-D])", class_name)
+    grade = int(m.group(1))
+    section = m.group(2)
+    return (grade, section)
+
+
+student_awards = collections.defaultdict(list)
 for row in rows:
-    key = (row[0], row[1], row[2])  # (Class, Clno, Name)
-    # Compose event name: Boy's/Girl's <grade> Grade <event>
+    key = (row[0], row[1], row[2])  # (Class_name, clno, name)
     gender = row[4]
     if gender.lower() == "boy":
         gender_str = "Boy's"
@@ -65,25 +72,13 @@ for row in rows:
     award_str = rank_to_award(row[6])
     student_awards[key].append((award_str, event_full))
 
-def class_sort_key(cls):
-    # Assumes class format like '1A', '2B', etc.
-    # Splits into (grade:int, section:str)
-    m = re.match(r"(\d+)([A-D])", cls)
-    if m:
-        grade = int(m.group(1))
-        section = m.group(2)
-        return (grade, section)
-    return (999, cls)  # fallback for unexpected format
 
-# Prepare data for Excel
+# list of data
 excel_rows = []
-# Sort students by class, clno, name
 sorted_students = sorted(student_awards.items(), key=lambda x: (class_sort_key(x[0][0]), int(x[0][1]), x[0][2]))
-for (cls, clno, name), awards in sorted_students:
+for (class_name, clno, name), awards in sorted_students:
     for award, event_name in awards:
-        # Create a row for each award
-        excel_rows.append([cls, clno, name, 'participant', f"{award} in {event_name}"])
-    # Add a blank row after each student
+        excel_rows.append([class_name, clno, name, 'participant', f"{award} in {event_name}"])
     excel_rows.append(['', '', '', '', ''])
 
 # Output file name
@@ -91,28 +86,25 @@ output_file = 'OLE.xlsx'
 if os.path.exists(output_file):
     os.remove(output_file)
 
-# Write to Excel
+# Data input to Excel
 df = pd.DataFrame(excel_rows, columns=['Class', 'Clno', 'Name', 'Role', 'Award'])
 
 with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-    # Title row
     pd.DataFrame([["Sports Day OLE Record"]]).to_excel(writer, index=False, header=False)
-    # Student award rows
     df.to_excel(writer, index=False, startrow=1)
 
-# Style the Excel sheet
-wb = load_workbook(output_file)
+# Data formatting in Excel
+wb = openpyxl.load_workbook(output_file)
 ws = wb.active
 ws.merge_cells('A1:E1')
 
-# Set title font style
-ws['A1'].font = Font(size=20, bold=True)
+ws['A1'].font = openpyxl.styles.Font(size=20, bold=True)
 
 ws.freeze_panes = 'A3'
 
 for col in range(1, 6):
     max_length = 0
-    col_letter = get_column_letter(col)
+    col_letter = openpyxl.utils.get_column_letter(col)
     for cell in ws[col_letter]:
         try:
             cell_value = str(cell.value)
@@ -122,8 +114,6 @@ for col in range(1, 6):
             max_length = max(max_length, len(cell_value))
     ws.column_dimensions[col_letter].width = max_length + 2
 
-# Save the updated workbook
+# Save and leave
 wb.save(output_file)
-
-# Close the database connection
 conn.close()

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from functools import partial
-from datetime import datetime
+import functools
+import datetime
 import sqlite3
 
 DB_PATH = "database\Sports day helper"
@@ -14,7 +14,6 @@ class RecordKeeperApp:
         master.resizable(False, False)
         master.grid_columnconfigure(0, weight=1)
 
-        # --- Dropdown Data ---
         self.racing_events = {
             'A': ["100m", "200m", "400m", "800m", "1500m"],
             'B': ["100m", "200m", "400m", "800m", "1500m"],
@@ -46,35 +45,32 @@ class RecordKeeperApp:
         header_frame.grid(row=0, column=0, sticky="ew")
         header_frame.grid_columnconfigure(0, weight=1)
         ttk.Label(header_frame, text="Record Keeper Tools", font=("Arial", 20, "bold"), foreground="#4F46E5").grid(row=0, column=0, pady=5)
-        ttk.Label(header_frame, text="This page provides tools for record-keeping during events.", font=("Arial", 10), foreground="#4B5563").grid(row=1, column=0, pady=0)
-
-    # Removed _create_menu_buttons, _go_home, _toggle_sidebar
 
     def _create_dropdowns(self, master):
         dropdown_frame = ttk.LabelFrame(master, text="Event Selection", padding="10")
         dropdown_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=10)
 
-        # Row 1: Type
+        # Type
         ttk.Label(dropdown_frame, text="Type:", font=("Arial", 10)).grid(row=0, column=0, sticky="w", padx=5, pady=2)
         type_menu = ttk.OptionMenu(dropdown_frame, self.type_var, "", "racing", "field", "relay", command=self._on_type_change)
         type_menu.grid(row=0, column=1, padx=5, pady=2)
 
-        # Row 1: Grade
+        # Grade
         ttk.Label(dropdown_frame, text="Grade:", font=("Arial", 10)).grid(row=0, column=2, sticky="w", padx=5, pady=2)
         grade_menu = ttk.OptionMenu(dropdown_frame, self.grade_var, "", "A", "B", "C", command=self._on_grade_gender_change)
         grade_menu.grid(row=0, column=3, padx=5, pady=2)
 
-        # Row 1: Gender
+        # Gender
         ttk.Label(dropdown_frame, text="Gender:", font=("Arial", 10)).grid(row=0, column=4, sticky="w", padx=5, pady=2)
         gender_menu = ttk.OptionMenu(dropdown_frame, self.gender_var, "", "male", "female", command=self._on_grade_gender_change)
         gender_menu.grid(row=0, column=5, padx=5, pady=2)
 
-        # Row 2: Item
+        # Item
         ttk.Label(dropdown_frame, text="Item:", font=("Arial", 10)).grid(row=1, column=0, sticky="w", padx=5, pady=2)
         self.item_menu = ttk.OptionMenu(dropdown_frame, self.item_var, "")
         self.item_menu.grid(row=1, column=1, padx=5, pady=2, sticky="w")
 
-        # Row 2: Track (for some racing events, shown below items)
+        # Track (for some racing events, shown below items)
         self.track_label = ttk.Label(dropdown_frame, text="Track No.:", font=("Arial", 10))
         self.track_menu = ttk.OptionMenu(dropdown_frame, self.track_var, "", *[""] + [f"Track {i}" for i in range(1, 9)])
         self.track_label.grid(row=2, column=0, sticky="w", padx=5, pady=2)
@@ -110,7 +106,6 @@ class RecordKeeperApp:
 
     def _on_item_select(self, value):
         self.item_var.set(value)
-        # Show track only for racing 100m, 200m, 400m
         if self.type_var.get() == "racing" and value in ["100m", "200m", "400m"]:
             self.track_label.grid()
             self.track_menu.grid()
@@ -138,15 +133,18 @@ class RecordKeeperApp:
             types_menu.grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["types"] = types_var
             row += 1
+
             ttk.Label(self.result_frame, text="Athlete ID:", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             athlete_id_var = tk.StringVar()
             ttk.Entry(self.result_frame, textvariable=athlete_id_var).grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["athlete_id"] = athlete_id_var
             row += 1
+
             ttk.Label(self.result_frame, text="Time (s):", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             time_var = tk.StringVar()
             ttk.Entry(self.result_frame, textvariable=time_var).grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["time"] = time_var
+
         elif type_ == "field":
             ttk.Label(self.result_frame, text="Heat/Final:", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             types_var = tk.StringVar()
@@ -154,37 +152,44 @@ class RecordKeeperApp:
             types_menu.grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["types"] = types_var
             row += 1
+
             ttk.Label(self.result_frame, text="Athlete ID:", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             athlete_id_var = tk.StringVar()
             ttk.Entry(self.result_frame, textvariable=athlete_id_var).grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["athlete_id"] = athlete_id_var
             row += 1
+
             ttk.Label(self.result_frame, text="Trial:", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             trial_var = tk.StringVar()
             ttk.Entry(self.result_frame, textvariable=trial_var).grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["trial"] = trial_var
             row += 1
+
             ttk.Label(self.result_frame, text="Distance (m):", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             distance_var = tk.StringVar()
             ttk.Entry(self.result_frame, textvariable=distance_var).grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["distance"] = distance_var
+
         elif type_ == "relay":
             ttk.Label(self.result_frame, text="Athlete ID:", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             athlete_id_var = tk.StringVar()
             ttk.Entry(self.result_frame, textvariable=athlete_id_var).grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["athlete_id"] = athlete_id_var
             row += 1
+
             ttk.Label(self.result_frame, text="Position:", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             position_var = tk.StringVar()
             ttk.Entry(self.result_frame, textvariable=position_var).grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["position"] = position_var
             row += 1
+
             ttk.Label(self.result_frame, text="Team:", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             team_var = tk.StringVar()
             team_menu = ttk.OptionMenu(self.result_frame, team_var, "", "Virtue", "Trust", "Loyalty", "Intellect")
             team_menu.grid(row=row, column=1, sticky="w", pady=2)
             self.result_fields["team"] = team_var
             row += 1
+
             ttk.Label(self.result_frame, text="Time (s):", font=("Arial", 10)).grid(row=row, column=0, sticky="w", pady=2)
             time_var = tk.StringVar()
             ttk.Entry(self.result_frame, textvariable=time_var).grid(row=row, column=1, sticky="w", pady=2)
@@ -202,20 +207,18 @@ class RecordKeeperApp:
         gender = self.gender_var.get()
         item = self.item_var.get()
         if not (type_ and grade and gender and item):
-            messagebox.showerror("Error", "Please select all event details.")
             return
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        # Find event_id
+
         db_gender = "boys" if gender == "male" else "girls"
         cursor.execute("SELECT event_id FROM event WHERE grade=? AND gender=? AND item=? AND category=?", (grade, db_gender, item, type_))
         row = cursor.fetchone()
         if not row:
-            messagebox.showerror("Error", "Event not found in database.")
             conn.close()
             return
         event_id = row[0]
-        # Prepare data for insert
+
         if type_ == "racing":
             types = self.result_fields["types"].get()
             athlete_id = self.result_fields["athlete_id"].get()
@@ -227,8 +230,8 @@ class RecordKeeperApp:
                 )
                 conn.commit()
                 messagebox.showinfo("Success", "Racing result submitted.")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to submit: {e}")
+            except:
+                pass
         elif type_ == "field":
             types = self.result_fields["types"].get()
             athlete_id = self.result_fields["athlete_id"].get()
@@ -241,8 +244,8 @@ class RecordKeeperApp:
                 )
                 conn.commit()
                 messagebox.showinfo("Success", "Field result submitted.")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to submit: {e}")
+            except:
+                pass
         elif type_ == "relay":
             athlete_id = self.result_fields["athlete_id"].get()
             position = self.result_fields["position"].get()
@@ -253,7 +256,6 @@ class RecordKeeperApp:
                     "INSERT OR REPLACE INTO relay_result (event_id, types, athlete_id, position, team, time) VALUES (?, ?, ?, ?, ?, ?)",
                     (event_id, "individual", athlete_id, int(position), team, float(time_val))
                 )
-                # Check if this is the last team member (4th for 4x100/4x400, 8th for 8x100)
                 cursor.execute(
                     "SELECT COUNT(*) FROM relay_result WHERE event_id=? AND team=? AND types='individual'",
                     (event_id, team)
@@ -272,8 +274,8 @@ class RecordKeeperApp:
                     )
                 conn.commit()
                 messagebox.showinfo("Success", "Relay result submitted.")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to submit: {e}")
+            except:
+                pass
         conn.close()
 
 if __name__ == "__main__":

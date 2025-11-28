@@ -79,8 +79,8 @@ function updateLoginUI() {
         displayNameSpan.textContent = loggedInUser.name;
 
         // logout-button
-        const logoutButton = document.createElement('button');
-        logoutButton.classList.add('logout-button');
+        const logoutButton = document.createElement('logout-button');
+        logoutButton.classList.add('toggle-btn');
         logoutButton.onclick = logout;
         authButtonDiv.appendChild(profileImage);
         authButtonDiv.appendChild(displayNameSpan);
@@ -90,27 +90,21 @@ function updateLoginUI() {
     } else {
         // google official sign-in button
         if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-            // ensure the container is clean, then render the button
-            authButtonDiv.innerHTML = '';
             google.accounts.id.renderButton(
                 authButtonDiv,
                 { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
             );
-        } else {
-            // If google sdk not loaded yet, we can show a fallback or log to console
-            console.warn('Google Identity Services not loaded. Sign-in button not rendered.');
-        }
-        const existingLogoutButton = document.querySelector('.logout-button');
+        const existingLogoutButton = document.querySelector('logout-button');
         if (existingLogoutButton) {
             existingLogoutButton.remove();
         }
         visible = false;
     }
 }
-
+}
 // --------------------------------------------loging in with google account--------------------------------------------
 function toggleLogoutButton() {
-    const logoutButton = document.querySelector('.logout-button');
+    const logoutButton = document.querySelector('logout-button');
     if (logoutButton) {
         logoutButton.style.display = 'block';
     }

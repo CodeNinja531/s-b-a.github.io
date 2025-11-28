@@ -2,27 +2,23 @@
 <html lang="en">
 <head>
     <!--Page setup-->
-    <title>House Points</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Points</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
-    <script src="auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
 </head>
-
-
-
 <body>
-    <div id="menu-container"></div>
-    <button class="home-btn" onclick="location.href='home.html'">Home</button>
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <button class="home-btn" onclick="location.href='home.html'">Home</button>
+    <div id="menu-container"></div>
+    <div class="auth"><div class="auth-button"></div></div>
+    <!--------------------------------------------->
 
     <main>
         <h1>Record Keeper Tools</h1>
-        <p>This page provides tools for record-keeping during events.</p>
         <div>
             <div>
                 <label for="type">Type:</label>
@@ -61,7 +57,8 @@
                     </select>
                 </div>
             </div>
-            <div id="track-no-container" style="margin-top:10px; display:none;">
+
+            <div id="track" style="margin-top:10px; display:none">
                 <label for="track">Track No.:</label>
                 <select id="track" name="track">
                     <option value="" selected>--</option>
@@ -80,37 +77,20 @@
         <form id="result-form">
             <div id="result-fields">
                 <h3 style="margin-top:0;">Enter Result</h3>
-                <div style="color:#888;">Please select all options above to enter a result.</div>
             </div>
             <button type="submit" class="submit-btn">Submit Result</button>
         </form>
         <div id="result-message"></div>
     </main>
 
-    <div class="auth-buttons">
-        <div class="auth-button"></div>
-    </div>
-
-    <!-- Embedded JavaScript -->
+    <!-- supplementary JavaScript (for updating the selection field thing) -->
     <script>
-        // IMPORTANT: This JavaScript file contains `fetch` calls to `/api/...` endpoints.
-        // These calls require a backend server (e.g., Node.js, Python, PHP)
-        // to interact with your SQLite database. This HTML file alone will NOT
-        // be able to save data to your SQLite database directly from the browser.
-
         document.addEventListener("DOMContentLoaded", () => {
-            // This part assumes menu.html exists and is loaded.
-            fetch("menu.html")
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById("menu-container").innerHTML = html;
-                });
-
             const typeSelect = document.getElementById("type");
             const gradeSelect = document.getElementById("grade");
             const genderSelect = document.getElementById("gender");
             const itemsSelect = document.getElementById("items");
-            const trackNoContainer = document.getElementById("track-no-container");
+            const trackNoContainer = document.getElementById("track");
             const trackSelect = document.getElementById("track");
 
             const racingEvents = {
@@ -223,11 +203,8 @@
                 const item = itemsSelect.value;
                 if (type && grade && gender && item) {
                     renderResultFields(type, item);
-                } else {
-                    resultFields.innerHTML = '<h3 style="margin-top:0;">Enter Result</h3><div style="color:#888;">Please select all options above to enter a result.</div>';
                 }
             }
-
             function renderResultFields(type, selectedItem = null) {
                 let html = '<h3 style="margin-top:0;">Enter Result</h3>';
                 if (type === "racing") {
@@ -302,7 +279,6 @@
                 resultMessage.textContent = "";
                 resultMessage.className = "";
                 submitButton.disabled = true;
-                submitButton.textContent = "Submitting...";
 
                 const type = typeSelect.value;
                 const grade = gradeSelect.value;
@@ -316,100 +292,8 @@
                     submitButton.textContent = "Submit Result";
                     return;
                 }
-
-                // Generate event key for Firebase
-                const dbGender = mapGenderToDB(gender);
-                const eventKey = getEventKey(grade, dbGender, item, type);
-
-                const formData = new FormData(resultForm);
-                const data = Object.fromEntries(formData.entries());
-
-                let resultData = {
-                    event_key: eventKey,
-                    grade: grade,
-                    gender: dbGender,
-                    item: item,
-                    category: type,
-                    timestamp: Date.now()
-                };
-
-                if (type === "racing") {
-                    resultData.types = data.types;
-                    resultData.athlete_id = data.athlete_id;
-                    resultData.time = parseFloat(data.time);
-                    // racing_result: event_key/types/athlete_id
-                    db.ref(`racing_result/${eventKey}/${data.types}/${data.athlete_id}`).set(resultData)
-                        .then(() => {
-                            resultMessage.textContent = "Result submitted successfully!";
-                            resultMessage.classList.add("success");
-                            resultForm.reset();
-                            updateResultForm();
-                        })
-                        .catch((error) => {
-                            resultMessage.textContent = "Error submitting result: " + error.message;
-                            resultMessage.classList.add("error");
-                        })
-                        .finally(() => {
-                            submitButton.disabled = false;
-                            submitButton.textContent = "Submit Result";
-                        });
-                } else if (type === "field") {
-                    resultData.types = data.types;
-                    resultData.athlete_id = data.athlete_id;
-                    resultData.trial = parseInt(data.trial);
-                    resultData.distance = parseFloat(data.distance);
-
-                    // field_result: event_key/types/athlete_id
-                    db.ref(`field_result/${eventKey}/${data.types}/${data.athlete_id}`).set(resultData)
-                        .then(() => {
-                            resultMessage.textContent = "Result submitted successfully!";
-                            resultMessage.classList.add("success");
-                            resultForm.reset();
-                            updateResultForm();
-                        })
-                        .catch((error) => {
-                            resultMessage.textContent = "Error submitting result: " + error.message;
-                            resultMessage.classList.add("error");
-                        })
-                        .finally(() => {
-                            submitButton.disabled = false;
-                            submitButton.textContent = "Submit Result";
-                        });
-                } else if (type === "relay") {
-                    resultData.types = "individual";
-                    resultData.athlete_id = data.athlete_id;
-                    resultData.position = parseInt(data.position);
-                    resultData.team = data.team;
-                    resultData.time = parseFloat(data.time);
-
-                    // relay_result: event_key/types/athlete_id
-                    db.ref(`relay_result/${eventKey}/individual/${data.athlete_id}`).set(resultData)
-                        .then(() => {
-                            resultMessage.textContent = "Result submitted successfully!";
-                            resultMessage.classList.add("success");
-                            resultForm.reset();
-                            updateResultForm();
-                        })
-                        .catch((error) => {
-                            resultMessage.textContent = "Error submitting result: " + error.message;
-                            resultMessage.classList.add("error");
-                        })
-                        .finally(() => {
-                            submitButton.disabled = false;
-                            submitButton.textContent = "Submit Result";
-                        });
-                }
             });
         });
-
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('main');
-            if (sidebar && mainContent) {
-                sidebar.classList.toggle('hidden');
-                mainContent.classList.toggle('collapsed');
-            }
-        }
     </script>
 </body>
 </html>

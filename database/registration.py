@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from functools import partial
-from datetime import datetime
+import functools
+import datetime
 import sqlite3
 
 DB_PATH = "database\Sports day helper"
@@ -9,19 +9,6 @@ DB_PATH = "database\Sports day helper"
 def get_all_students():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    # Ensure stu_info table exists
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stu_info (
-            stu_id INTEGER PRIMARY KEY NOT NULL,
-            name TEXT NOT NULL,
-            class TEXT,
-            clno INTEGER,
-            gender TEXT NOT NULL,
-            dob DATE,
-            gmail TEXT,
-            house TEXT
-        )
-    """)
     cursor.execute("SELECT stu_id, name, class, clno, gender, dob, house, gmail FROM stu_info")
     students = cursor.fetchall()
     conn.close()
@@ -50,13 +37,6 @@ def save_registration_to_db(data):
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS participants (
-                athlete_id TEXT PRIMARY KEY NOT NULL,
-                stu_id TEXT,
-                event_id INTEGER
-            )
-        """)
         stu_id = data.get('stu_id', None)
         cursor.execute("SELECT athlete_id FROM participants WHERE stu_id=?", (stu_id,))
         row = cursor.fetchone()
@@ -82,8 +62,8 @@ def save_registration_to_db(data):
         conn.commit()
         conn.close()
         return True, f"Registration submitted successfully! Athlete ID: {athlete_id}"
-    except Exception as e:
-        return False, f"Database error: {e}"
+    except:
+        return
 
 class SportsRegistrationApp:
     def __init__(self, master):
@@ -132,7 +112,7 @@ class SportsRegistrationApp:
         self._create_user_info_section(master)
         self._create_sports_group_display(master)
         self._create_event_sections(master)
-        self._create_submit_button(master)
+        self._create_button(master)
         self.gender = 'male' if self.user_info['gender'].upper().startswith('M') else 'female'
 
         # Initialize UI
@@ -247,11 +227,7 @@ class SportsRegistrationApp:
         self.field_events_frame.grid(row=5, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
         self.field_events_frame.grid_columnconfigure(0, weight=1)
 
-    def _create_submit_button(self, master):
-        """
-        Creates the 'Submit Registration' button.
-        Reduced pady.
-        """
+    def _create_button(self, master):
         submit_button = ttk.Button(master, text="Submit Registration", command=self.submit_registration, style="TButton")
         submit_button.grid(row=6, column=0, pady=10)
         master.style = ttk.Style()
@@ -281,8 +257,6 @@ class SportsRegistrationApp:
 
         if selected_gender:
             self.sports_group_label.config(text=f"Sports Group: {gender_display} {self.grade} Grade")
-        else:
-            self.sports_group_label.config(text="No gender information available.")
 
         for widget in self.racing_events_frame.winfo_children():
             widget.destroy()
@@ -297,7 +271,7 @@ class SportsRegistrationApp:
         if selected_gender:
             def add_checkbox(frame, event_value, var_dict, widget_dict, row):
                 var = tk.BooleanVar(self.master)
-                var.trace_add("write", partial(self._event_selection_trace, var))
+                var.trace_add("write", functools.partial(self.update_event_selection_limits, var))
                 cb = ttk.Checkbutton(frame, text=event_value, variable=var, style="TCheckbutton")
                 cb.grid(row=row, column=0, sticky="w", pady=1)
                 var_dict[event_value] = var
@@ -307,40 +281,29 @@ class SportsRegistrationApp:
             for i, event in enumerate(racing_events_for_grade):
                 event_value = f"{gender_display} {self.grade} {event}"
                 add_checkbox(self.racing_events_frame, event_value, self.racing_checkbox_vars, self.racing_checkbox_widgets, i)
-            if not racing_events_for_grade:
-                ttk.Label(self.racing_events_frame, text="No racing events available for this group.", font=("Inter", 9), foreground="#6B7280").grid(row=0, column=0, sticky="w")
 
             field_events_for_grade = self.field_events_data.get(self.grade, [])
             for i, event in enumerate(field_events_for_grade):
                 event_value = f"{gender_display} {self.grade} {event}"
                 add_checkbox(self.field_events_frame, event_value, self.field_checkbox_vars, self.field_checkbox_widgets, i)
-            if not field_events_for_grade:
-                ttk.Label(self.field_events_frame, text="No field events available for this group.", font=("Inter", 9), foreground="#6B7280").grid(row=0, column=0, sticky="w")
 
             if selected_gender == "female" and self.grade == "B":
                 event_value = f"{gender_display} {self.grade} Softball"
                 row = len(self.field_events_data.get(self.grade, []))
                 add_checkbox(self.field_events_frame, event_value, self.field_checkbox_vars, self.field_checkbox_widgets, row)
 
-
         self.update_event_selection_limits()
 
-    def _event_selection_trace(self, var, *args):
-        self.update_event_selection_limits()
-
+    # check boxes
     def update_event_selection_limits(self):
-        """
-        Controls checkboxes
-        """
         selected_racing_count = sum(var.get() for var in self.racing_checkbox_vars.values())
         selected_field_count = sum(var.get() for var in self.field_checkbox_vars.values())
-        total_selected = selected_racing_count + selected_field_count
-
+        selected = selected_racing_count + selected_field_count
         for event_value, var in self.racing_checkbox_vars.items():
             widget = self.racing_checkbox_widgets[event_value]
             if var.get():
                 widget.state(['!disabled'])
-            elif total_selected >= 3 or selected_racing_count >= 2:
+            elif selected >= 3 or selected_racing_count >= 2:
                 widget.state(['disabled'])
             else:
                 widget.state(['!disabled'])
@@ -349,34 +312,30 @@ class SportsRegistrationApp:
             widget = self.field_checkbox_widgets[event_value]
             if var.get():
                 widget.state(['!disabled'])
-            elif total_selected >= 3 or selected_field_count >= 2:
+            elif selected >= 3 or selected_field_count >= 2:
                 widget.state(['disabled'])
             else:
                 widget.state(['!disabled'])
 
     def submit_registration(self):
         """
-        Mainly data checking
+         data checking
         """
         selected_racing = [event_value for event_value, var in self.racing_checkbox_vars.items() if var.get()]
         selected_field = [event_value for event_value, var in self.field_checkbox_vars.items() if var.get()]
 
-        if not self.gender:
-            messagebox.showwarning("Validation Error", "No gender information available.")
+        selected = len(selected_racing) + len(selected_field)
+        if selected == 0:
+            messagebox.showwarning("Input Error", "Please select at least one event.")
             return
-
-        total_selected = len(selected_racing) + len(selected_field)
-        if total_selected == 0:
-            messagebox.showwarning("Validation Error", "Please select at least one event.")
-            return
-        if total_selected > 3:
-            messagebox.showwarning("Validation Error", "You can select a maximum of 3 events in total. Please adjust your selection.")
+        if selected > 3:
+            messagebox.showwarning("Input Error", "You can select a maximum of 3 events in total.")
             return
         if len(selected_racing) > 2:
-            messagebox.showwarning("Validation Error", "You can select a maximum of 2 racing events. Please adjust your selection.")
+            messagebox.showwarning("Input Error", "You can select a maximum of 2 racing events.")
             return
         if len(selected_field) > 2:
-            messagebox.showwarning("Validation Error", "You can select a maximum of 2 field events. Please adjust your selection.")
+            messagebox.showwarning("Input Error", "You can select a maximum of 2 field events.")
             return
 
         registrationData = {
@@ -389,25 +348,18 @@ class SportsRegistrationApp:
             'timestamp': int(datetime.now().timestamp()),
             'stu_id': self.user_info.get('stu_id', None)
         }
+
         success, msg = save_registration_to_db(registrationData)
         if success:
-            messagebox.showinfo("Registration Summary",
-                f"Registration for: {self.name}\n"
+            messagebox.showinfo("Registration",
+                f"Registration name: {self.name}\n"
                 f"Class: {self.class_info}, Class No.: {self.class_number}\n"
                 f"Gender: {self.gender.capitalize()}\n\n"
                 f"Selected Racing Events:\n{', '.join(selected_racing) if selected_racing else 'None'}\n\n"
                 f"Selected Field Events:\n{', '.join(selected_field) if selected_field else 'None'}\n\n"
                 f"{msg}"
             )
-        else:
-            messagebox.showerror("Error", msg)
 
-    def __del__(self):
-        try:
-            if hasattr(self, 'conn'):
-                pass
-        except Exception:
-            pass
 
 if __name__ == "__main__":
     root = tk.Tk()
