@@ -110,14 +110,14 @@ main.collapsed {
 }
 
 /* Authorize buttons container */
-.auth-buttons {
+.auth {
     position: fixed;
     top: 20px;
     right: 20px;
 }
 
 
-.auth-buttons .auth-button img {
+.auth .auth-button img {
     width: 30px;
     height: 30px;
 }

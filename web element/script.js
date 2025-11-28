@@ -4,6 +4,7 @@ let visible = false;
 
 // --------------------------------------------loging in with google account--------------------------------------------
 // copied from google sites
+
 function initializeGoogleSignIn() {
     google.accounts.id.initialize({
         client_id: googleClientId,
@@ -11,10 +12,13 @@ function initializeGoogleSignIn() {
         auto_select: false,
         prompt_parent_id: 'g_id_signin'
     });
-    google.accounts.id.renderButton(
-        document.querySelector('.auth-button'),
-        { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
-    );
+    const container = document.querySelector('.auth-button');
+    if (container) {
+        google.accounts.id.renderButton(
+            container,
+            { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
+        );
+    }
 }
 
 // standard decoding function for JSON
@@ -52,11 +56,6 @@ function CredentialResponse(response) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email })
     })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Backend login successful:", data);
-        })
-        .catch(err => console.error('Backend login failed:', err));
 }
 
 // for the login button
@@ -90,13 +89,17 @@ function updateLoginUI() {
         visible = false;
     } else {
         // google official sign-in button
-        google.accounts.id.renderButton(
-            authButtonDiv,
-            { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
-        );
-        authButtonDiv.innerHTML = '';
-        authButtonDiv.classList.add('auth-button');
-        authButtonDiv.onclick = null;
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+            // ensure the container is clean, then render the button
+            authButtonDiv.innerHTML = '';
+            google.accounts.id.renderButton(
+                authButtonDiv,
+                { theme: "outline", size: "large", type: "standard", text: "signin_with", shape: "rectangular" }
+            );
+        } else {
+            // If google sdk not loaded yet, we can show a fallback or log to console
+            console.warn('Google Identity Services not loaded. Sign-in button not rendered.');
+        }
         const existingLogoutButton = document.querySelector('.logout-button');
         if (existingLogoutButton) {
             existingLogoutButton.remove();
@@ -106,12 +109,10 @@ function updateLoginUI() {
 }
 
 // --------------------------------------------loging in with google account--------------------------------------------
-
 function toggleLogoutButton() {
-    const logoutButton = document.getElementById('logout-button');
+    const logoutButton = document.querySelector('.logout-button');
     if (logoutButton) {
-        logoutButton.style.display = visible ? 'none' : 'block';
-        visible = !visible;
+        logoutButton.style.display = 'block';
     }
 }
 
@@ -125,9 +126,9 @@ function logout() {
 function getUserInfo() {
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     if (loggedInUser && loggedInUser.name) {
-        return { displayName: loggedInUser.name };
+        return { displayName: loggedInUser.name, email: loggedInUser.email };
     } else {
-        return { displayName: null };
+        return null;
     }
 }
 

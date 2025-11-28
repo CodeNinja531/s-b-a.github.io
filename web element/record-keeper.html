@@ -82,7 +82,7 @@
                 <h3 style="margin-top:0;">Enter Result</h3>
                 <div style="color:#888;">Please select all options above to enter a result.</div>
             </div>
-            <button type="submit" class="small-submit-btn">Submit Result</button>
+            <button type="submit" class="submit-btn">Submit Result</button>
         </form>
         <div id="result-message"></div>
     </main>
@@ -214,7 +214,7 @@
             const resultForm = document.getElementById("result-form");
             const resultFields = document.getElementById("result-fields");
             const resultMessage = document.getElementById("result-message");
-            const submitButton = resultForm.querySelector('.small-submit-btn');
+            const submitButton = resultForm.querySelector('.submit-btn');
 
             function updateResultForm() {
                 const type = typeSelect.value;
