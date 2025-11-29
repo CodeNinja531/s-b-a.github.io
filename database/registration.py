@@ -73,13 +73,12 @@ class SportsRegistrationApp:
         master.resizable(False, False)
         master.grid_columnconfigure(0, weight=1)
 
-        # --- Gmail Selection from DB ---
         students = get_all_students()
         self.students = students
-        self.debug_names = [row[1] for row in students]
-        self.selected_name = tk.StringVar(value=self.debug_names[0] if self.debug_names else "")
+        self.sample_names = [row[1] for row in students]
+        self.selected_name = tk.StringVar(value=self.sample_names[0] if self.sample_names else "")
         self._create_name_selector(master)
-        # --- User Info from DB ---
+
         self.user_info = self._get_user_info_by_name(self.selected_name.get())
         self.class_info = self.user_info['class']
         self.class_number = self.user_info['clno']
@@ -159,7 +158,7 @@ class SportsRegistrationApp:
         frame = ttk.LabelFrame(master, text="Select Name", padding="5")
         frame.grid(row=1, column=0, sticky="ew", padx=20, pady=5)
         ttk.Label(frame, text="Name:", font=("Inter", 10)).grid(row=0, column=0, sticky="w", padx=5)
-        name_menu = ttk.OptionMenu(frame, self.selected_name, self.selected_name.get(), *self.debug_names, command=lambda x: self._on_name_change())
+        name_menu = ttk.OptionMenu(frame, self.selected_name, self.selected_name.get(), *self.sample_names, command=lambda x: self._on_name_change())
         name_menu.grid(row=0, column=1, padx=5)
         name_menu.config(width=30)
 
@@ -174,9 +173,6 @@ class SportsRegistrationApp:
         self.update_gender_selection()
 
     def _get_grade(self, dob):
-        """
-        based on DOB compared to 1-9-2024.
-        """
         cutoff = datetime(2024, 9, 1)
         dob_date = datetime.strptime(dob, "%Y-%m-%d")
         age = cutoff.year - dob_date.year - ((cutoff.month, cutoff.day) < (dob_date.month, dob_date.day))
@@ -215,16 +211,16 @@ class SportsRegistrationApp:
         ttk.Label(house_row_frame, text=house, font=("Inter", 10, "bold"), foreground=house_color).pack(side="left")
 
     def _create_sports_group_display(self, master):
-        self.sports_group_label = ttk.Label(master, text="", font=("Inter", 11, "bold"), foreground="#10B981", wraplength=450) # Reduced wraplength
-        self.sports_group_label.grid(row=3, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
+        self.sports_group_label = ttk.Label(master, text="", font=("Inter", 11, "bold"), foreground="#10B981", wraplength=450)
+        self.sports_group_label.grid(row=3, column=0, sticky="ew", padx=20, pady=5)
 
     def _create_event_sections(self, master):
-        self.racing_events_frame = ttk.LabelFrame(master, text="Racing Events (Max 2)", padding="10", relief="groove") # Reduced padding
-        self.racing_events_frame.grid(row=4, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
+        self.racing_events_frame = ttk.LabelFrame(master, text="Racing Events (Max 2)", padding="10", relief="groove")
+        self.racing_events_frame.grid(row=4, column=0, sticky="ew", padx=20, pady=5)
         self.racing_events_frame.grid_columnconfigure(0, weight=1)
 
-        self.field_events_frame = ttk.LabelFrame(master, text="Field Events (Max 2)", padding="10", relief="groove") # Reduced padding
-        self.field_events_frame.grid(row=5, column=0, sticky="ew", padx=20, pady=5) # Reduced pady
+        self.field_events_frame = ttk.LabelFrame(master, text="Field Events (Max 2)", padding="10", relief="groove")
+        self.field_events_frame.grid(row=5, column=0, sticky="ew", padx=20, pady=5)
         self.field_events_frame.grid_columnconfigure(0, weight=1)
 
     def _create_button(self, master):
@@ -246,7 +242,7 @@ class SportsRegistrationApp:
 
     def update_gender_selection(self):
         """
-        Updates the sports group display and regenerates the event checkboxes based on database gender.
+        Updates the sports group display
         """
         selected_gender = self.gender
         gender_display = ""
@@ -319,7 +315,7 @@ class SportsRegistrationApp:
 
     def submit_registration(self):
         """
-         data checking
+         data validation
         """
         selected_racing = [event_value for event_value, var in self.racing_checkbox_vars.items() if var.get()]
         selected_field = [event_value for event_value, var in self.field_checkbox_vars.items() if var.get()]

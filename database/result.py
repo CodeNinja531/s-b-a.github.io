@@ -100,9 +100,7 @@ class ResultDisplayApp:
         )
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
-        # Make the canvas expand vertically with the window
-        master.grid_rowconfigure(1, weight=1)
-        self._populate_results(scrollable_frame)
+
 
     def _populate_results(self, parent):
         connect = sqlite3.connect(DB_PATH)
