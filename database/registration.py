@@ -19,8 +19,7 @@ def get_next_athlete_id(cursor):
     row = cursor.fetchone()
     if row and row[0]:
         return f"{int(row[0])+1:04d}"
-    else:
-        return "0001"
+
 
 def get_event_id(cursor, event_name):
     parts = event_name.split()
@@ -31,7 +30,7 @@ def get_event_id(cursor, event_name):
     item = " ".join(parts[2:])
     cursor.execute("SELECT event_id FROM event WHERE grade=? AND gender=? AND item=?", (grade, gender, item))
     row = cursor.fetchone()
-    return row[0] if row else None
+    return row[0]
 
 def save_registration_to_db(data):
     try:
@@ -52,7 +51,6 @@ def save_registration_to_db(data):
                 INSERT INTO participants (athlete_id, stu_id, event_id)
                 VALUES (?, ?, ?)
             """, (athlete_id, stu_id, event_id))
-        # Field events
         for event in data['field_events']:
             event_id = get_event_id(cursor, event)
             cursor.execute("""
@@ -63,7 +61,7 @@ def save_registration_to_db(data):
         conn.close()
         return True, f"Registration submitted successfully! Athlete ID: {athlete_id}"
     except:
-        return
+        pass
 
 class SportsRegistrationApp:
     def __init__(self, master):
@@ -348,11 +346,11 @@ class SportsRegistrationApp:
         success, msg = save_registration_to_db(registrationData)
         if success:
             messagebox.showinfo("Registration",
-                f"Registration name: {self.name}\n"
+                f"Name: {self.name}\n"
                 f"Class: {self.class_info}, Class No.: {self.class_number}\n"
                 f"Gender: {self.gender.capitalize()}\n\n"
-                f"Selected Racing Events:\n{', '.join(selected_racing) if selected_racing else 'None'}\n\n"
-                f"Selected Field Events:\n{', '.join(selected_field) if selected_field else 'None'}\n\n"
+                f"Racing Events:\n{', '.join(selected_racing) if selected_racing else 'None'}\n\n"
+                f"Field Events:\n{', '.join(selected_field) if selected_field else 'None'}\n\n"
                 f"{msg}"
             )
 
