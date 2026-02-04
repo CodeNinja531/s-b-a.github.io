@@ -196,30 +196,24 @@ class RecordKeeperApp:
             self.result_fields["time"] = time_var
 
     def _create_submit_button(self, master):
-        btn_frame = ttk.Frame(master)
-        btn_frame.grid(row=4, column=0, pady=20)
-        submit_btn = ttk.Button(btn_frame, text="Submit Result", command=self.submit_result)
+        submit_btn = ttk.Button(ttk.Frame(master).grid(row=4, column=0, pady=20), text="Submit Result", command=self.submit_result)
         submit_btn.pack(ipadx=10, ipady=5)
 
     def submit_result(self):
-        type_ = self.type_var.get()
-        grade = self.grade_var.get()
-        gender = self.gender_var.get()
-        item = self.item_var.get()
-        if not (type_ and grade and gender and item):
+        if not (self.type_var.get() and self.grade_var.get() and self.gender_var.get() and self.item_var.get()):
             return
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
-        db_gender = "boys" if gender == "male" else "girls"
-        cursor.execute("SELECT event_id FROM event WHERE grade=? AND gender=? AND item=? AND category=?", (grade, db_gender, item, type_))
+        db_gender = "boys" if self.gender_var.get() == "male" else "girls"
+        cursor.execute("SELECT event_id FROM event WHERE grade=? AND gender=? AND item=? AND category=?", (self.grade_var.get(), db_gender, self.item_var.get(), type_))
         row = cursor.fetchone()
         if not row:
             conn.close()
             return
         event_id = row[0]
 
-        if type_ == "racing":
+        if self.type_var.get() == "racing":
             types = self.result_fields["types"].get()
             athlete_id = self.result_fields["athlete_id"].get()
             time_val = self.result_fields["time"].get()
@@ -232,7 +226,7 @@ class RecordKeeperApp:
                 messagebox.showinfo("Success", "Racing result submitted.")
             except:
                 pass
-        elif type_ == "field":
+        elif self.type_var.get() == "field":
             types = self.result_fields["types"].get()
             athlete_id = self.result_fields["athlete_id"].get()
             trial = self.result_fields["trial"].get()
@@ -246,7 +240,7 @@ class RecordKeeperApp:
                 messagebox.showinfo("Success", "Field result submitted.")
             except:
                 pass
-        elif type_ == "relay":
+        elif self.type_var.get() == "relay":
             athlete_id = self.result_fields["athlete_id"].get()
             position = self.result_fields["position"].get()
             team = self.result_fields["team"].get()
@@ -261,7 +255,7 @@ class RecordKeeperApp:
                     (event_id, team)
                 )
                 count = cursor.fetchone()[0]
-                max_members = 8 if item == "8x100" else 4
+                max_members = 8 if self.item_var.get() == "8x100" else 4
                 if count == max_members:
                     cursor.execute(
                         "SELECT SUM(time) FROM relay_result WHERE event_id=? AND team=? AND types='individual'",
