@@ -1,3 +1,6 @@
+"""
+This programme is 50% based on AI generated UI, with the algorithms created on my own (DB insert logic)
+"""
 import tkinter as tk
 from tkinter import ttk, messagebox
 import functools
